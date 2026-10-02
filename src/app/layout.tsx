@@ -61,12 +61,12 @@ export default function RootLayout({
       <head>
         <title>
           {isAdminPage
-            ? 'Chinux Super-Admin | Cash Flow Mission Control'
-            : 'Chinux | Digital Waybills & Ugwo Tracking for Nigerian Wholesale'}
+            ? 'Chinux TradeBill | Admin – Cash Flow Mission Control'
+            : 'Chinux TradeBill | Digital Waybills, Stock Broadcast & Wholesale for Nigerian Traders'}
         </title>
         <meta
           name="description"
-          content="Digital Waybill Generator, 4-Digit Pickup PIN, Ugwo Debt Reminders, and Daily Sales Profit Logbook for Onitsha and Nigerian Traders."
+          content="Chinux TradeBill – Digital waybills, 4-digit pickup PIN, wholesale stock broadcast, Ugwo debt collection, cargo tracking, and daily sales logbook for Nigerian traders."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
         <link rel="manifest" href="/manifest.json" />

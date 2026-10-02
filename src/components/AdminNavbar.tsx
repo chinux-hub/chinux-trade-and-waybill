@@ -19,7 +19,7 @@ export const AdminNavbar: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="font-black text-base tracking-tight text-white">
-                CHINUX <span className="text-rose-500">ADMIN</span>
+                CHINUX <span className="text-emerald-400">TRADEBILL</span> <span className="text-rose-500">ADMIN</span>
               </span>
               <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-rose-950 text-rose-400 border border-rose-800">
                 FOUNDER PORTAL

@@ -66,9 +66,10 @@ export default function DashboardPage() {
       <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-emerald-700 via-teal-800 to-navy-900 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
+            {/* App brand pill */}
             <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-emerald-100 flex items-center gap-1.5 border border-white/10">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              {profile.marketLocation}
+              Chinux TradeBill
             </span>
 
             {/* Role Status Tag */}
@@ -87,8 +88,26 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight">{profile.businessName}</h1>
-          <p className="text-xs text-emerald-100/90 max-w-xl">{profile.tagline}</p>
+          {/* Business name — only shows when the trader has set it */}
+          {profile.businessName ? (
+            <>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight">{profile.businessName}</h1>
+              {profile.tagline && (
+                <p className="text-xs text-emerald-100/90 max-w-xl">{profile.tagline}</p>
+              )}
+            </>
+          ) : (
+            <>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight">
+                CHIN<span className="text-emerald-300">UX</span>{' '}
+                <span className="text-emerald-200">TradeBill</span>
+              </h1>
+              <p className="text-xs text-emerald-100/80 max-w-xl">
+                Welcome! Set up your business name and profile in{' '}
+                <Link href="/settings" className="underline font-semibold hover:text-white">Settings</Link> to get started.
+              </p>
+            </>
+          )}
 
           <div className="pt-2 flex flex-wrap gap-2 text-xs">
             <Link

@@ -1,7 +1,7 @@
 {
-  "name": "Chinux Trade & Waybill",
-  "short_name": "Chinux",
-  "description": "Digital Waybills, Ugwo Credit Tracking, Daily Sales Logbook & Onitsha Wholesale Trade",
+  "name": "Chinux TradeBill",
+  "short_name": "TradeBill",
+  "description": "Digital Waybills, Wholesale Stock Broadcast, Ugwo Debt Collection, Cargo Tracking & Daily Sales Logbook for Nigerian Traders",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#090d16",

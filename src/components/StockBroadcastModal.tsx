@@ -34,7 +34,7 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
   const [selectedPoster, setSelectedPoster] = useState<'oga' | 'apprentice' | 'both'>(preferredPoster);
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';
-  const storeUrl = `${origin}/store`;
+  const storeUrl = product ? `${origin}/store?product=${product.id}` : `${origin}/store`;
 
   // Construct message with direct customer storefront link
   const broadcastText = `🚨 *NEW STOCK ARRIVAL NOTICE* 🚨
@@ -49,7 +49,7 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
 "${customNote}"
 
 ${product.imageUrl && !product.imageUrl.startsWith('data:') ? `📷 *Photo Preview:* ${product.imageUrl}\n` : ''}
-🛒 *View All Available Goods & Place Waybill Order:*
+🛒 *View Item & Place Waybill Order:*
 👉 ${storeUrl}
 
 📞 *Call/WhatsApp to Order:* ${profile.phone}

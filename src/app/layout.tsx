@@ -34,7 +34,13 @@ export default function RootLayout({
   const pathname = usePathname();
 
   const isAdminPage = pathname?.startsWith('/admin');
-  const isPublicLanding = pathname === '/' || pathname === '/welcome' || pathname === '/join';
+  const isPublicLanding =
+    pathname === '/' ||
+    pathname === '/welcome' ||
+    pathname === '/join' ||
+    pathname === '/store' ||
+    pathname?.startsWith('/store') ||
+    pathname?.startsWith('/waybill/');
 
   const [isOffline, setIsOffline] = useState(false);
   const [dismissOffline, setDismissOffline] = useState(false);

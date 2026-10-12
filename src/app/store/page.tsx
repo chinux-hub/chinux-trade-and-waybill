@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   ShoppingBag,
   Search,
@@ -13,19 +13,20 @@ import {
   MapPin,
   Sparkles,
   ArrowRight,
-  RefreshCw,
   KeyRound,
   CheckCircle2,
-  Clock,
   Layers,
   ArrowLeft,
+  PackageCheck,
 } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { CatalogProduct, TraderProfile, Waybill } from '@/types';
 import { formatNaira } from '@/lib/formatters';
 
-export default function CustomerStorefrontPage() {
-  const router = useRouter();
+function CustomerStorefrontContent() {
+  const searchParams = useSearchParams();
+  const highlightProductId = searchParams.get('product') || searchParams.get('id');
+
   const [profile, setProfile] = useState<TraderProfile>(storage.getProfile());
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +41,10 @@ export default function CustomerStorefrontPage() {
     setProfile(storage.getProfile());
     setCatalog(storage.getCatalog());
   }, []);
+
+  const featuredProduct = highlightProductId
+    ? catalog.find((p) => p.id === highlightProductId || p.name.toLowerCase().includes(highlightProductId.toLowerCase()))
+    : null;
 
   const categories = [
     'All',
@@ -60,18 +65,9 @@ export default function CustomerStorefrontPage() {
 
   const handleOrderViaWhatsApp = (prod: CatalogProduct) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';
-    const message = `Hello *${profile.businessName}*,
-I am viewing your wholesale catalog on Chinux (${origin}/store).
+    const message = `Hello *${profile.businessName || 'Wholesale Store'}*,\nI am viewing your wholesale catalog on Chinux (${origin}/store?product=${prod.id}).\n\n📦 *I want to order:*\n- *Item:* ${prod.name}\n- *Category:* ${prod.category}\n- *Wholesale Price:* ${formatNaira(prod.wholesalePrice)} / carton\n- *Stock Available:* ${prod.stockCount} cartons\n\nPlease confirm carton availability, payment account, and waybill dispatch schedule to my city.`;
 
-📦 *I want to order:*
-- *Item:* ${prod.name}
-- *Category:* ${prod.category}
-- *Wholesale Price:* ${formatNaira(prod.wholesalePrice)} / carton
-- *Stock Available:* ${prod.stockCount} cartons
-
-Please confirm carton availability, payment account, and waybill dispatch schedule to my city.`;
-
-    let cleanPhone = profile.phone.replace(/\D/g, '');
+    let cleanPhone = (profile.phone || '').replace(/\D/g, '');
     if (cleanPhone.startsWith('0')) cleanPhone = '234' + cleanPhone.slice(1);
     const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -95,43 +91,106 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
   };
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-16 max-w-5xl mx-auto">
-      {/* Switcher Banner: Customer <-> Trader Mode */}
-      <div className="rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 p-4 text-white shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm">
-            <RefreshCw className="w-5 h-5 text-emerald-100" />
+    <div className="space-y-6 animate-fadeIn pb-20 max-w-5xl mx-auto px-4 pt-4 sm:pt-6">
+      {/* Top Bar for Customer: Branding & Discreet Trader Switcher */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl overflow-hidden bg-white border border-emerald-500/20 shadow-sm">
+            <img src="/chinux-logo.png" alt="Chinux" className="w-full h-full object-cover" />
           </div>
           <div>
-            <span className="text-xs font-black uppercase tracking-wider text-emerald-200 block">
-              Buyer / Reseller Mode Active
+            <span className="font-black text-sm tracking-tight text-slate-900 dark:text-white">
+              CHIN<span className="text-emerald-500">UX</span>
             </span>
-            <p className="text-xs text-white/90">
-              Do you sell goods or need to issue waybills & record profits?
-            </p>
+            <span className="text-[10px] text-slate-400 font-medium block -mt-0.5">Wholesale Storefront</span>
           </div>
-        </div>
+        </Link>
 
         <Link
           href="/dashboard"
-          className="px-4 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95"
+          className="text-[11px] font-bold text-slate-500 hover:text-emerald-500 flex items-center gap-1 transition-colors px-2.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-navy-900"
         >
-          <span>Switch to Trader / Oga Mode</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+          <span>Shop Owner Login</span>
+          <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
+
+      {/* ⭐ SPOTLIGHT: Featured Product from WhatsApp Broadcast */}
+      {featuredProduct && (
+        <div className="p-5 sm:p-7 rounded-3xl bg-gradient-to-br from-emerald-950/90 via-slate-900 to-navy-950 border-2 border-emerald-500/70 shadow-2xl space-y-4 animate-fadeIn text-white">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-300">
+                Item Broadcasted on WhatsApp
+              </span>
+            </div>
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500 text-white shadow-sm">
+              {featuredProduct.isAvailable ? `In Stock (${featuredProduct.stockCount} cartons in shop)` : 'Out of Stock'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
+            <div className="relative h-60 sm:h-72 rounded-2xl overflow-hidden bg-slate-800 border border-slate-700">
+              {featuredProduct.imageUrl ? (
+                <img
+                  src={featuredProduct.imageUrl}
+                  alt={featuredProduct.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
+                  Photo
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 flex flex-col justify-between">
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+                  {featuredProduct.category}
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-white leading-snug">
+                  {featuredProduct.name}
+                </h2>
+                <div className="text-2xl sm:text-3xl font-black text-emerald-400">
+                  {formatNaira(featuredProduct.wholesalePrice)}
+                  <span className="text-xs font-normal text-slate-300"> / carton wholesale</span>
+                </div>
+                {featuredProduct.retailPrice && (
+                  <p className="text-xs text-slate-300">
+                    Suggested Retail: <strong>{formatNaira(featuredProduct.retailPrice)}</strong>
+                  </p>
+                )}
+                <p className="text-xs text-slate-300 leading-relaxed pt-1">
+                  Ready for instant nationwide waybill dispatch from <strong>{profile.businessName || 'Wholesale Store'}</strong> in {profile.marketLocation || 'Commercial Hub'}.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleOrderViaWhatsApp(featuredProduct)}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm rounded-2xl shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-95"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>Order This Product via WhatsApp Now</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Seller Storefront Profile Header */}
       <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 flex items-center justify-center text-purple-700 dark:text-purple-300 font-black text-xl shrink-0">
-              {profile.businessName.charAt(0) || 'C'}
+            <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-black text-xl shrink-0">
+              {profile.businessName?.charAt(0) || 'C'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
-                  {profile.businessName}
+                  {profile.businessName || 'Verified Wholesale Importer'}
                 </h1>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
                   <ShieldCheck className="w-3 h-3" />
@@ -140,21 +199,23 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
               </div>
               <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                <span>{profile.marketLocation}</span>
+                <span>{profile.marketLocation || 'Onitsha & Lagos Wholesale Hubs'}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {profile.phone && (
+              <a
+                href={`tel:${profile.phone}`}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all"
+              >
+                <Phone className="w-3.5 h-3.5" />
+                <span>Call Store</span>
+              </a>
+            )}
             <a
-              href={`tel:${profile.phone}`}
-              className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-navy-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 transition-all"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Call Store</span>
-            </a>
-            <a
-              href={`https://api.whatsapp.com/send?phone=${profile.phone.replace(/\D/g, '')}`}
+              href={`https://api.whatsapp.com/send?phone=${(profile.phone || '').replace(/\D/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95"
@@ -186,7 +247,7 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
       <div className="p-5 rounded-3xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Truck className="w-5 h-5 text-emerald-600" />
+            <PackageCheck className="w-5 h-5 text-emerald-600" />
             <h2 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
               Track Your Waybill Cargo (No Login Needed)
             </h2>
@@ -293,8 +354,8 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
                 onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-2 rounded-xl font-bold whitespace-nowrap transition-all ${
                   activeCategory === cat
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-purple-400'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-emerald-400'
                 }`}
               >
                 {cat}
@@ -309,7 +370,9 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
         {filteredProducts.map((prod) => (
           <div
             key={prod.id}
-            className="bg-white dark:bg-navy-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow"
+            className={`bg-white dark:bg-navy-900 rounded-3xl border overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow ${
+              prod.id === highlightProductId ? 'border-2 border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 dark:border-slate-800'
+            }`}
           >
             <div className="relative h-48 bg-slate-100 dark:bg-navy-950 overflow-hidden">
               {prod.imageUrl ? (
@@ -340,7 +403,7 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
 
             <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] uppercase font-bold text-purple-600 dark:text-purple-400 tracking-wider">
+                <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
                   {prod.category}
                 </span>
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white mt-0.5 line-clamp-2">
@@ -390,5 +453,19 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
         </div>
       )}
     </div>
+  );
+}
+
+export default function CustomerStorefrontPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-xs text-slate-400">
+          Loading wholesale storefront...
+        </div>
+      }
+    >
+      <CustomerStorefrontContent />
+    </Suspense>
   );
 }

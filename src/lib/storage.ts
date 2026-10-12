@@ -57,8 +57,8 @@ const DEFAULT_POLICY: PlatformPolicy = {
   totalTradersRegistered: 0,
   totalPlatformTradeVolume: 0,
   appVersion: '1.2.0',
-  paystackPublicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
-  paystackSecretKey: '',
+  paystackPublicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_f5c0e02cd6de5ff61a1ee9cd19d873e36fe27a36',
+  paystackSecretKey: 'sk_test_c988094eafd996402d671c910324bc17717c5240',
 };
 
 // CLEAN DAY-1 STATE: Zero pre-inputted data

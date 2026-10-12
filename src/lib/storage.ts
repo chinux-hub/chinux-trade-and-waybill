@@ -52,9 +52,9 @@ const DEFAULT_POLICY: PlatformPolicy = {
   proPlanYearlyPrice: 35000,
   monetizationActive: true,
   maintenanceMode: false,
-  broadcastAnnouncement: '🎉 Welcome to Chinux! Digital waybills and automated bank sync live for Anambra & Lagos traders.',
-  totalTradersRegistered: 142,
-  totalPlatformTradeVolume: 84500000,
+  broadcastAnnouncement: '🎉 Welcome to Chinux TradeBill! Digital waybills and automated bank sync live for Anambra & Lagos traders.',
+  totalTradersRegistered: 0,
+  totalPlatformTradeVolume: 0,
   appVersion: '1.2.0',
 };
 

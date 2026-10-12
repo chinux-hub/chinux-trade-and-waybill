@@ -12,13 +12,14 @@ interface BankConnectModalProps {
 }
 
 export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onClose }) => {
+  const profile = storage.getProfile();
   const [bank, setBank] = useState<ConnectedBank | null>(storage.getConnectedBank());
-  const [selectedBank, setSelectedBank] = useState('Moniepoint MFB');
-  const [accountNumber, setAccountNumber] = useState('8123456789');
-  const [accountName, setAccountName] = useState('CHINUX GLOBAL VENTURES LTD');
+  const [selectedBank, setSelectedBank] = useState(profile.bankName || 'Moniepoint MFB');
+  const [accountNumber, setAccountNumber] = useState(profile.accountNumber || '');
+  const [accountName, setAccountName] = useState(profile.accountName || '');
   const [isSyncing, setIsSyncing] = useState(false);
-  const [simulatedAmount, setSimulatedAmount] = useState('150000');
-  const [simulatedCustomer, setSimulatedCustomer] = useState('Chief Emeka (Abuja)');
+  const [simulatedAmount, setSimulatedAmount] = useState('');
+  const [simulatedCustomer, setSimulatedCustomer] = useState('');
   const [simulatedMessage, setSimulatedMessage] = useState('');
 
   if (!isOpen) return null;

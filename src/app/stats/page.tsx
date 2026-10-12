@@ -22,23 +22,35 @@ export default function StatsPage() {
   const isOga = profile.activeRole === 'oga';
   const canViewProfit = isOga || profile.permissions.apprenticeCanViewProfit;
 
-  // Prepare chart data points
-  const chartData = [
-    { label: 'Mon', revenue: 240000, profit: 72000 },
-    { label: 'Tue', revenue: 380000, profit: 114000 },
-    { label: 'Wed', revenue: 190000, profit: 57000 },
-    { label: 'Thu', revenue: 520000, profit: 156000 },
-    { label: 'Fri', revenue: 410000, profit: 123000 },
-    { label: 'Sat', revenue: 680000, profit: 210000 },
-    { label: 'Today', revenue: 350000, profit: 100000 },
-  ];
+  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  // Calculate dynamic 7-day chart data based on real sales entries
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dayLabel = i === 6 ? 'Today' : daysOfWeek[d.getDay()];
+    const dateStr = d.toISOString().split('T')[0];
+
+    const daySales = sales.filter((s) => s.date.startsWith(dateStr));
+    const rev = daySales.reduce((sum, item) => sum + (item.totalRevenue || 0), 0);
+    const prof = daySales.reduce((sum, item) => sum + (item.netProfit || 0), 0);
+
+    return {
+      label: dayLabel,
+      revenue: rev,
+      profit: prof,
+    };
+  });
+
+  const chartData = last7Days;
 
   const totalWaybills = waybills.length;
   const deliveredWaybills = waybills.filter((wb) => wb.status === 'collected').length;
-  const deliverySuccessRate = totalWaybills > 0 ? ((deliveredWaybills / totalWaybills) * 100).toFixed(0) : '100';
+  const deliverySuccessRate = totalWaybills > 0 ? ((deliveredWaybills / totalWaybills) * 100).toFixed(0) : '0';
 
   const totalRevenue = sales.reduce((acc, curr) => acc + curr.totalRevenue, 0);
   const totalProfit = sales.reduce((acc, curr) => acc + curr.netProfit, 0);
+  const avgMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0';
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12 max-w-5xl mx-auto">
@@ -81,10 +93,10 @@ export default function StatsPage() {
         <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 space-y-1">
           <span className="text-xs font-semibold text-slate-500">Average Profit Margin</span>
           <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-            {canViewProfit ? '29.4%' : '🔒 Private'}
+            {canViewProfit ? `${avgMargin}%` : '🔒 Private'}
           </div>
           <div className="text-[11px] text-slate-400">
-            {canViewProfit ? 'Strong healthy wholesale spread' : 'Oga setting active'}
+            {canViewProfit ? 'Based on actual recorded sales' : 'Oga setting active'}
           </div>
         </div>
 

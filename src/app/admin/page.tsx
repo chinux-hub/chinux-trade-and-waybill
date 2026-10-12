@@ -105,7 +105,8 @@ export default function SuperAdminPage() {
   };
 
   const totalWaybills = waybills.length;
-  const totalVolume = waybills.reduce((acc, curr) => acc + curr.totalValue, 0) + 84500000;
+  const totalVolume = waybills.reduce((acc, curr) => acc + (curr.totalValue || 0), 0);
+  const registeredShopsCount = storage.getSavedAccounts().length > 0 ? storage.getSavedAccounts().length : (storage.getCurrentUser() ? 1 : 0);
   const openFeedbacks = feedbacks.filter((fb) => fb.status === 'open');
 
   const handleToggleMonetization = () => {
@@ -244,45 +245,45 @@ export default function SuperAdminPage() {
 
       {/* Platform Macro Usage Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
             <span>Total Registered Traders</span>
-            <Users className="w-4 h-4 text-emerald-500" />
+            <Users className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">
-            {policy.totalTradersRegistered} Shops
+          <div className="text-2xl font-black text-white">
+            {registeredShopsCount} {registeredShopsCount === 1 ? 'Shop' : 'Shops'}
           </div>
-          <div className="text-[11px] text-emerald-600 font-medium">Onitsha, Nnewi & Lagos</div>
+          <div className="text-[11px] text-emerald-400 font-medium">Onitsha, Nnewi & Lagos</div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
             <span>Trade Volume Processed</span>
-            <DollarSign className="w-4 h-4 text-emerald-500" />
+            <DollarSign className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+          <div className="text-2xl font-black text-emerald-400">
             {formatNaira(totalVolume)}
           </div>
           <div className="text-[11px] text-slate-400">Total cargo & waybill value</div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
             <span>Waybills Generated</span>
-            <PackageCheck className="w-4 h-4 text-blue-500" />
+            <PackageCheck className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">
-            {totalWaybills + 318}
+          <div className="text-2xl font-black text-white">
+            {totalWaybills}
           </div>
-          <div className="text-[11px] text-blue-600 font-medium">100% with secure Pickup PINs</div>
+          <div className="text-[11px] text-blue-400 font-medium">100% with secure Pickup PINs</div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
             <span>Open Feedback / Disputes</span>
-            <MessageSquare className="w-4 h-4 text-rose-500" />
+            <MessageSquare className="w-4 h-4 text-rose-400" />
           </div>
-          <div className="text-2xl font-black text-rose-600 dark:text-rose-400">
+          <div className="text-2xl font-black text-rose-400">
             {openFeedbacks.length} Pending
           </div>
           <div className="text-[11px] text-slate-400">Requires response below</div>
@@ -290,14 +291,14 @@ export default function SuperAdminPage() {
       </div>
 
       {/* Cash Flow Policy Engine */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-emerald-600" />
+            <h2 className="text-base font-extrabold text-white flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-emerald-400" />
               Cash Flow & Monetization Policy Engine
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5">
               Control the monetization rules that generate cash flow for your startup.
             </p>
           </div>
@@ -410,7 +411,7 @@ export default function SuperAdminPage() {
       </div>
 
       {/* Live App Version & Update Notification Push */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-md text-white space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -442,7 +443,7 @@ export default function SuperAdminPage() {
       </div>
 
       {/* User Feedback & Dispute Resolution Desk */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-md text-white space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">

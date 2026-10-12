@@ -255,7 +255,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onOpenAuth}
               className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 hover:border-emerald-500 transition-all"
-              title="Account Profile & Google Sign-in"
+              title="Account Profile & Sign-in"
             >
               <User className="w-3.5 h-3.5 text-emerald-600" />
               <span>{currentUser ? currentUser.name.split(' ')[0] : 'Sign In'}</span>
@@ -496,7 +496,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-emerald-600" />
-                    <span>Trader Profile & Google Auth</span>
+                    <span>Trader Profile & Account</span>
                   </div>
                   <span className="text-[10px] text-slate-400">{currentUser ? currentUser.name.split(' ')[0] : 'Sign In'}</span>
                 </button>

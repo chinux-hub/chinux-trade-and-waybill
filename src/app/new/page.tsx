@@ -122,7 +122,7 @@ export default function NewWaybillPage() {
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <Link
-          href="/"
+          href="/dashboard"
           className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white"
         >
           <ArrowLeft className="w-4 h-4" />

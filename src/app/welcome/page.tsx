@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ShieldCheck,
   PackageCheck,
@@ -20,9 +21,35 @@ import {
   Store,
   Boxes,
   BadgeCheck,
+  LogIn,
 } from 'lucide-react';
+import { storage } from '@/lib/storage';
+import { User } from '@/types';
+import { AuthModal } from '@/components/AuthModal';
 
 export default function WelcomePage() {
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentUser(storage.getCurrentUser());
+
+    const handleUpdate = () => {
+      setCurrentUser(storage.getCurrentUser());
+    };
+    window.addEventListener('chinux_data_updated', handleUpdate);
+    return () => window.removeEventListener('chinux_data_updated', handleUpdate);
+  }, []);
+
+  const handleLaunchApp = () => {
+    if (storage.getCurrentUser()) {
+      router.push('/dashboard');
+    } else {
+      setIsAuthOpen(true);
+    }
+  };
+
   const marketHubs = [
     {
       name: 'Onitsha Main Market & Bridgehead',
@@ -86,7 +113,13 @@ export default function WelcomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white pb-20 relative overflow-hidden">
+      {/* Dynamic Ambient Background Glow Orbs */}
+      <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-emerald-500/20 rounded-full blur-[130px] pointer-events-none animate-pulseGlow" />
+      <div className="absolute top-[850px] -left-36 w-[550px] h-[550px] bg-teal-500/15 rounded-full blur-[120px] pointer-events-none animate-floatSlow" />
+      <div className="absolute top-[1700px] -right-36 w-[600px] h-[600px] bg-emerald-600/15 rounded-full blur-[125px] pointer-events-none animate-pulseGlow" />
+      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/20 rounded-full blur-[140px] pointer-events-none" />
+
       {/* Top Banner Navigation */}
       <nav className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -114,13 +147,24 @@ export default function WelcomePage() {
             >
               Apprentice Join
             </Link>
-            <Link
-              href="/"
-              className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1"
-            >
-              <span>Enter App</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+
+            {currentUser ? (
+              <Link
+                href="/dashboard"
+                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1.5"
+              >
+                <span>Dashboard ({currentUser.name.split(' ')[0]})</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            ) : (
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1.5"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Sign In / Enter App</span>
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -142,13 +186,24 @@ export default function WelcomePage() {
 
         {/* Hero CTA Pills */}
         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <Link
-            href="/"
-            className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/30 text-sm flex items-center gap-2 transition-all hover:scale-105"
-          >
-            <span>Launch Trader Portal (Day-1 Ready)</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          {currentUser ? (
+            <Link
+              href="/dashboard"
+              className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/30 text-sm flex items-center gap-2 transition-all hover:scale-105"
+            >
+              <span>Go to {currentUser.businessName || 'Shop'} Dashboard</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <button
+              onClick={() => setIsAuthOpen(true)}
+              className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/30 text-sm flex items-center gap-2 transition-all hover:scale-105"
+            >
+              <span>Launch Trader Portal (Day-1 Ready)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          )}
+
           <Link
             href="/join"
             className="px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold rounded-2xl text-sm transition-all"
@@ -169,7 +224,7 @@ export default function WelcomePage() {
       </header>
 
       {/* ========================================================================= */}
-      {/* 📍 BEGINNING SECTION: MAJOR COMMERCIAL MARKETS & PLACES INVOLVED */}
+      {/* 📍 SECTION: MAJOR COMMERCIAL MARKETS & HUBS */}
       {/* ========================================================================= */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6">
         <div className="text-center space-y-1">
@@ -187,7 +242,7 @@ export default function WelcomePage() {
           {marketHubs.map((hub, idx) => (
             <div
               key={idx}
-              className="rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl group hover:border-emerald-500/50 transition-all flex flex-col justify-between"
+              className="rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl group card-glow-scroll hover:border-emerald-500/80 transition-all flex flex-col justify-between"
             >
               <div className="relative h-44 w-full overflow-hidden bg-slate-800">
                 <img
@@ -220,7 +275,7 @@ export default function WelcomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 🛡️ 6 CORE PILLARS GRID */}
+      {/* 🛡️ 6 CORE PLATFORM PILLARS GRID */}
       {/* ========================================================================= */}
       <section aria-label="Core platform pillars" className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <div className="text-center space-y-1">
@@ -230,7 +285,7 @@ export default function WelcomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Pillar 1: PIN Waybills */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg hover:border-emerald-500/50 transition-all">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
               <PackageCheck className="w-5 h-5" />
             </div>
@@ -241,7 +296,7 @@ export default function WelcomePage() {
           </div>
 
           {/* Pillar 2: Ugwo Recovery */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg hover:border-emerald-500/50 transition-all">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center font-bold">
               <AlertCircle className="w-5 h-5" />
             </div>
@@ -252,7 +307,7 @@ export default function WelcomePage() {
           </div>
 
           {/* Pillar 3: Oga Sovereignty */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg hover:border-emerald-500/50 transition-all">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
               <Lock className="w-5 h-5" />
             </div>
@@ -263,7 +318,7 @@ export default function WelcomePage() {
           </div>
 
           {/* Pillar 4: Bank Auto-Sync */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg hover:border-emerald-500/50 transition-all">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5" />
             </div>
@@ -274,18 +329,18 @@ export default function WelcomePage() {
           </div>
 
           {/* Pillar 5: WhatsApp Stock Flyers */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg hover:border-emerald-500/50 transition-all">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">
               <Share2 className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-base text-white">New Stock WhatsApp Broadcast & Status</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Upload product photos and broadcast new arrivals to customer WhatsApp chats or generate high-converting WhatsApp Status flyers in 1 click, complete with direct online customer storefront links.
+              Upload product photos from your device gallery and broadcast new arrivals to customer WhatsApp chats or generate high-converting WhatsApp Status flyers in 1 click, complete with direct online customer storefront links.
             </p>
           </div>
 
           {/* Pillar 6: Mobile PWA & Offline Engine */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg hover:border-emerald-500/50 transition-all">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">
               <Smartphone className="w-5 h-5" />
             </div>
@@ -298,7 +353,7 @@ export default function WelcomePage() {
       </section>
 
       {/* ========================================================================= */}
-      {/* 🏬 ENDING SECTION: SHOPS, WAREHOUSES & OPERATIONS IN ACTION */}
+      {/* 🏬 SECTION: SHOPS, WAREHOUSES & OPERATIONS IN ACTION */}
       {/* ========================================================================= */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-6">
         <div className="text-center space-y-1">
@@ -316,7 +371,7 @@ export default function WelcomePage() {
           {shopGalleries.map((shop, idx) => (
             <div
               key={idx}
-              className="rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl group hover:border-emerald-500/50 transition-all flex flex-col justify-between"
+              className="rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-xl group card-glow-scroll hover:border-emerald-500/80 transition-all flex flex-col justify-between"
             >
               <div className="relative h-44 w-full overflow-hidden bg-slate-800">
                 <img
@@ -347,7 +402,7 @@ export default function WelcomePage() {
 
       {/* Bottom CTA Banner */}
       <footer className="max-w-4xl mx-auto px-4 sm:px-6 pt-10 text-center space-y-4">
-        <div className="p-8 rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 border border-emerald-500/30 text-white space-y-4 shadow-2xl">
+        <div className="p-8 rounded-3xl bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 border border-emerald-500/30 text-white space-y-4 shadow-2xl card-glow-scroll hover:border-emerald-400/70">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
             <BadgeCheck className="w-4 h-4 text-emerald-400" />
             <span>Built by Traders, for Traders</span>
@@ -357,13 +412,24 @@ export default function WelcomePage() {
             Join hundreds of wholesale traders in Onitsha Main Market, Nnewi, and Lagos Trade Fair. Start your 30-day free trial right now with zero card required.
           </p>
           <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <Link
-              href="/"
-              className="px-6 py-3.5 bg-white text-emerald-900 font-extrabold rounded-2xl shadow-lg hover:bg-emerald-50 transition-all text-xs sm:text-sm flex items-center gap-2"
-            >
-              <span>Launch Chinux TradeBill App</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {currentUser ? (
+              <Link
+                href="/dashboard"
+                className="px-6 py-3.5 bg-white text-emerald-900 font-extrabold rounded-2xl shadow-lg hover:bg-emerald-50 transition-all text-xs sm:text-sm flex items-center gap-2"
+              >
+                <span>Launch Chinux TradeBill App</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="px-6 py-3.5 bg-white text-emerald-900 font-extrabold rounded-2xl shadow-lg hover:bg-emerald-50 transition-all text-xs sm:text-sm flex items-center gap-2"
+              >
+                <span>Launch Chinux TradeBill App</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+
             <Link
               href="/store"
               className="px-5 py-3.5 bg-slate-900/80 hover:bg-slate-900 text-white border border-white/20 font-bold rounded-2xl transition-all text-xs sm:text-sm"
@@ -376,6 +442,19 @@ export default function WelcomePage() {
           Chinux TradeBill • Anambra & Lagos Interstate Wholesale Operating System
         </p>
       </footer>
+
+      {/* Auth Modal for 1-Click Sign In / Register */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => {
+          setIsAuthOpen(false);
+          const user = storage.getCurrentUser();
+          setCurrentUser(user);
+          if (user) {
+            router.push('/dashboard');
+          }
+        }}
+      />
     </div>
   );
 }

@@ -9,7 +9,7 @@ export const MobileBottomNav: React.FC = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { label: 'Home', href: '/', icon: Home },
+    { label: 'Home', href: '/dashboard', icon: Home },
     { label: 'Waybills', href: '/waybill', icon: PackageCheck },
     { label: 'Dispatch', href: '/new', icon: PlusCircle, highlight: true },
     { label: 'Logbook', href: '/logbook', icon: BookOpen },

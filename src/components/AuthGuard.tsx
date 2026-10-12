@@ -16,6 +16,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   // Routes accessible without being signed in:
   const isPublicRoute =
+    pathname === '/' ||
     pathname === '/welcome' ||
     pathname === '/join' ||
     pathname === '/store' ||
@@ -34,7 +35,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       if (!currentUser) {
         setIsAuthorized(false);
         setChecking(false);
-        router.replace('/welcome');
+        router.replace('/');
       } else {
         setIsAuthorized(true);
         setChecking(false);

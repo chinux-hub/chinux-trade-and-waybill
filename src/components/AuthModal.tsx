@@ -92,7 +92,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setCurrentUser(null);
     setSuccessMsg('Logged out successfully.');
     if (typeof window !== 'undefined') {
-      window.location.href = '/welcome';
+      window.location.href = '/';
     }
   };
 

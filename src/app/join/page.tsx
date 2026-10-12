@@ -40,7 +40,7 @@ function JoinApprenticeContent() {
     if (joined) {
       setSuccessMsg('Successfully connected to Master Shop! Redirecting to Apprentice Dashboard...');
       setTimeout(() => {
-        router.push('/');
+        router.push('/dashboard');
       }, 1500);
     } else {
       setIsSubmitting(false);
@@ -136,7 +136,7 @@ function JoinApprenticeContent() {
         </form>
 
         <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-center">
-          <Link href="/" className="text-slate-500 hover:text-slate-800 dark:hover:text-white inline-flex items-center gap-1">
+          <Link href="/dashboard" className="text-slate-500 hover:text-slate-800 dark:hover:text-white inline-flex items-center gap-1">
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Return to Regular App</span>
           </Link>

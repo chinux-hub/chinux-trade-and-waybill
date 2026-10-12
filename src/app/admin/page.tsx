@@ -193,7 +193,7 @@ export default function SuperAdminPage() {
 
           <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
             <span>Passkey hint: <code className="text-slate-400">chinux2026</code></span>
-            <Link href="/" className="text-rose-400 hover:underline flex items-center gap-1">
+            <Link href="/dashboard" className="text-rose-400 hover:underline flex items-center gap-1">
               <span>Exit to App</span>
             </Link>
           </div>
@@ -233,7 +233,7 @@ export default function SuperAdminPage() {
               <span>Lock & Sign Out</span>
             </button>
             <Link
-              href="/"
+              href="/dashboard"
               className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />

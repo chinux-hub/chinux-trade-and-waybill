@@ -49,6 +49,58 @@ body {
   animation: slideUp 0.2s ease-out forwards;
 }
 
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+    filter: blur(40px);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.12);
+    filter: blur(55px);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-15px) translateX(10px);
+  }
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+
+.animate-floatSlow {
+  animation: floatSlow 8s ease-in-out infinite;
+}
+
+@keyframes borderGlowPulse {
+  0%, 100% {
+    border-color: rgba(51, 65, 85, 0.8);
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+  }
+  50% {
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 0 25px -4px rgba(16, 185, 129, 0.18), 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Scroll glow card utility */
+.card-glow-scroll {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: borderGlowPulse 6s ease-in-out infinite;
+}
+.card-glow-scroll:hover {
+  border-color: rgba(16, 185, 129, 0.85) !important;
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.42), 0 0 15px -3px rgba(20, 184, 166, 0.25) !important;
+  transform: translateY(-4px);
+}
+
 /* Hide scrollbar for clean horizontal tabs */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -57,3 +109,4 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+

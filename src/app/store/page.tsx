@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -113,7 +113,7 @@ Please confirm carton availability, payment account, and waybill dispatch schedu
         </div>
 
         <Link
-          href="/"
+          href="/dashboard"
           className="px-4 py-2 bg-white text-emerald-800 hover:bg-emerald-50 font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95"
         >
           <span>Switch to Trader / Oga Mode</span>

@@ -187,6 +187,8 @@ export interface PlatformPolicy {
   totalTradersRegistered: number;
   totalPlatformTradeVolume: number;
   appVersion: string;
+  paystackPublicKey?: string;
+  paystackSecretKey?: string;
 }
 
 export interface PlatformRegistrationLog {

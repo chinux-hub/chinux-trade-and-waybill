@@ -25,6 +25,7 @@ import {
   LogOut,
   ShieldAlert,
   Boxes,
+  CreditCard,
 } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { PlatformPolicy, FeedbackItem, Waybill, PlatformRegistrationLog } from '@/types';
@@ -392,7 +393,7 @@ export default function SuperAdminPage() {
             </span>
           </div>
 
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-3">
             <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Platform Announcement Banner
             </label>
@@ -405,6 +406,54 @@ export default function SuperAdminPage() {
             <span className="text-[10px] text-slate-400 mt-1 block">
               Broadcast alert shown across all traders' dashboard.
             </span>
+          </div>
+
+          <div className="sm:col-span-3 pt-3 border-t border-slate-800/80">
+            <div className="flex items-center gap-2 mb-2">
+              <CreditCard className="w-4 h-4 text-emerald-400" />
+              <h3 className="font-extrabold text-sm text-white">Paystack Payment Gateway API Integration</h3>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Live & Test Ready
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mb-3">
+              Enter your Paystack API keys from your Paystack Dashboard (Settings &gt; API Keys &amp; Webhooks).
+              Traders will make payments directly into your account.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Paystack Public Key (Client-side)
+                </label>
+                <input
+                  type="text"
+                  placeholder="pk_test_... or pk_live_..."
+                  value={policy.paystackPublicKey || ''}
+                  onChange={(e) => setPolicy({ ...policy, paystackPublicKey: e.target.value.trim() })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Used by trader devices to securely open the official Paystack popup modal.
+                </span>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-300 mb-1">
+                  Paystack Secret Key (Server-side Webhook)
+                </label>
+                <input
+                  type="password"
+                  placeholder="sk_test_... or sk_live_..."
+                  value={policy.paystackSecretKey || ''}
+                  onChange={(e) => setPolicy({ ...policy, paystackSecretKey: e.target.value.trim() })}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono text-xs focus:border-emerald-500 outline-none"
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">
+                  Used to verify signature on Paystack Webhook (<code>/api/webhook/paystack</code>).
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="sm:col-span-3 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">

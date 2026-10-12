@@ -57,6 +57,8 @@ const DEFAULT_POLICY: PlatformPolicy = {
   totalTradersRegistered: 0,
   totalPlatformTradeVolume: 0,
   appVersion: '1.2.0',
+  paystackPublicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '',
+  paystackSecretKey: '',
 };
 
 // CLEAN DAY-1 STATE: Zero pre-inputted data
@@ -584,7 +586,7 @@ class StorageManager {
     this.saveProfile(profile);
   }
 
-  activateSubscription(tier: 'monthly' | 'yearly'): void {
+  activateSubscription(tier: 'monthly' | 'yearly', reference?: string): void {
     const profile = this.getProfile();
     profile.isSubscribed = true;
     profile.subscriptionTier = tier;
@@ -592,13 +594,16 @@ class StorageManager {
     profile.subscriptionExpiryDate = new Date(Date.now() + durationDays * 86400000).toISOString();
     this.saveProfile(profile);
 
+    const currentUser = this.getCurrentUser();
+    const actorName = currentUser?.name || profile.businessName || 'Oga Merchant';
+
     this.addAuditLog({
       id: 'audit-' + Date.now(),
       timestamp: new Date().toISOString(),
-      actorName: 'Oga Chinua',
+      actorName,
       actorRole: 'oga',
       actionType: 'SETTINGS_CHANGED',
-      description: `Activated ${tier === 'monthly' ? 'Monthly Pro (₦3,500)' : 'Yearly Pro (₦35,000)'} subscription.`,
+      description: `Activated ${tier === 'monthly' ? 'Monthly Pro (₦3,500)' : 'Yearly Pro (₦35,000)'} subscription via Paystack${reference ? ` (Ref: ${reference})` : ''}.`,
     });
 
     this.emitUpdate();

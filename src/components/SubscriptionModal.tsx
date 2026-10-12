@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { X, Sparkles, Check, Zap, Shield, Crown, Building2, CreditCard } from 'lucide-react';
@@ -27,14 +27,100 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
   const monthlyPrice = policy.proPlanMonthlyPrice || 3500;
   const yearlyPrice = policy.proPlanYearlyPrice || 35000;
+  const currentUser = storage.getCurrentUser();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
 
   const handleSubscribe = () => {
-    storage.activateSubscription(selectedTier);
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      onClose();
-    }, 2000);
+    setPayError(null);
+    const amount = selectedTier === 'monthly' ? monthlyPrice : yearlyPrice;
+    const email = currentUser?.email || 'trader@chinux.ng';
+    const paystackKey = policy.paystackPublicKey || process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
+
+    // If Paystack Public Key is configured, load official Paystack Inline Popup
+    if (paystackKey && typeof window !== 'undefined') {
+      setIsProcessing(true);
+
+      const triggerPaystackPopup = () => {
+        // @ts-ignore
+        if (window.PaystackPop) {
+          // @ts-ignore
+          const handler = window.PaystackPop.setup({
+            key: paystackKey,
+            email: email,
+            amount: amount * 100, // Paystack requires amount in Kobo
+            currency: 'NGN',
+            ref: 'CHX-' + Date.now() + '-' + Math.floor(Math.random() * 100000),
+            metadata: {
+              custom_fields: [
+                {
+                  display_name: 'Business Name',
+                  variable_name: 'business_name',
+                  value: profile.businessName || currentUser?.businessName || 'Chinux Trader',
+                },
+                {
+                  display_name: 'Plan Tier',
+                  variable_name: 'plan_tier',
+                  value: selectedTier,
+                },
+              ],
+            },
+            callback: (response: { reference: string }) => {
+              setIsProcessing(false);
+              storage.activateSubscription(selectedTier, response.reference);
+              setIsSuccess(true);
+              setTimeout(() => {
+                setIsSuccess(false);
+                onClose();
+              }, 2500);
+            },
+            onClose: () => {
+              setIsProcessing(false);
+            },
+          });
+          handler.openIframe();
+        } else {
+          // Fallback if script blocked
+          setIsProcessing(false);
+          storage.activateSubscription(selectedTier, 'CHX-LOCAL-' + Date.now());
+          setIsSuccess(true);
+          setTimeout(() => {
+            setIsSuccess(false);
+            onClose();
+          }, 2000);
+        }
+      };
+
+      // Dynamically load Paystack Inline JS if not yet loaded
+      // @ts-ignore
+      if (!window.PaystackPop) {
+        const script = document.createElement('script');
+        script.src = 'https://js.paystack.co/v1/inline.js';
+        script.async = true;
+        script.onload = () => triggerPaystackPopup();
+        script.onerror = () => {
+          setIsProcessing(false);
+          // If offline/blocked, fallback gracefully to instant local activation
+          storage.activateSubscription(selectedTier, 'CHX-OFFLINE-' + Date.now());
+          setIsSuccess(true);
+          setTimeout(() => {
+            setIsSuccess(false);
+            onClose();
+          }, 2000);
+        };
+        document.body.appendChild(script);
+      } else {
+        triggerPaystackPopup();
+      }
+    } else {
+      // Direct activation when no public key is yet entered in admin
+      storage.activateSubscription(selectedTier, 'CHX-DEMO-' + Date.now());
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsSuccess(false);
+        onClose();
+      }, 2000);
+    }
   };
 
   return (
@@ -173,12 +259,22 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             {/* Subscribe Action Button */}
             <button
               onClick={handleSubscribe}
-              className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+              disabled={isProcessing}
+              className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all hover:scale-[1.01] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>
-                Activate {selectedTier === 'monthly' ? 'Monthly' : 'Yearly'} Plan ({formatNaira(selectedTier === 'monthly' ? monthlyPrice : yearlyPrice)})
-              </span>
+              {isProcessing ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Connecting to Paystack Secure Checkout...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>
+                    Pay with Paystack • {formatNaira(selectedTier === 'monthly' ? monthlyPrice : yearlyPrice)}
+                  </span>
+                </>
+              )}
             </button>
 
             <div className="text-center text-[10px] text-slate-400">

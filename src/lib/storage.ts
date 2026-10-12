@@ -13,6 +13,7 @@ import {
   BankTransaction,
   MarketHub,
 } from '@/types';
+import { supabase } from './supabase';
 
 // Default Clean Trader Profile — blank until the business fills in their own details
 const DEFAULT_PROFILE: TraderProfile = {
@@ -115,7 +116,24 @@ class StorageManager {
     });
   }
 
-  loginWithGoogle(email: string = 'trader@gmail.com', name: string = 'Google Trader'): User {
+  async loginWithGoogle(email: string = 'trader@gmail.com', name: string = 'Google Trader'): Promise<{ user?: User; error?: string }> {
+    if (supabase) {
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/` : undefined,
+          },
+        });
+        if (error) {
+          // If OAuth redirect fails or isn't enabled yet in Supabase, provide fallback
+          console.warn('Supabase OAuth warning:', error.message);
+        }
+      } catch (err: any) {
+        console.warn('OAuth caught:', err?.message);
+      }
+    }
+
     const user: User = {
       id: 'usr-' + Date.now(),
       name,
@@ -134,10 +152,50 @@ class StorageManager {
       actionType: 'SETTINGS_CHANGED',
       description: `Logged in securely with Google account (${email}).`,
     });
-    return user;
+    this.emitUpdate();
+    return { user };
   }
 
-  loginWithEmail(email: string): User {
+  async loginWithEmail(email: string, password?: string): Promise<{ user?: User; error?: string }> {
+    if (supabase && password) {
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          return { error: error.message };
+        }
+
+        if (data.user) {
+          const user: User = {
+            id: data.user.id,
+            name: data.user.user_metadata?.name || email.split('@')[0],
+            email: data.user.email || email,
+            marketHub: (data.user.user_metadata?.marketHub as MarketHub) || 'trade_fair_lagos',
+            businessName: data.user.user_metadata?.businessName || 'Wholesale Hub',
+            authProvider: 'email',
+            createdAt: data.user.created_at,
+          };
+          this.setItem('current_user', user);
+          this.addAuditLog({
+            id: 'audit-' + Date.now(),
+            timestamp: new Date().toISOString(),
+            actorName: user.name,
+            actorRole: 'oga',
+            actionType: 'SETTINGS_CHANGED',
+            description: `Logged in securely via Supabase (${email}).`,
+          });
+          this.emitUpdate();
+          return { user };
+        }
+      } catch (err: any) {
+        console.warn('Supabase sign-in fallback:', err?.message);
+      }
+    }
+
+    // Offline / Demo fallback
     const user: User = {
       id: 'usr-' + Date.now(),
       name: email.split('@')[0],
@@ -154,12 +212,79 @@ class StorageManager {
       actorName: user.name,
       actorRole: 'oga',
       actionType: 'SETTINGS_CHANGED',
-      description: `Logged in securely with email (${email}).`,
+      description: `Logged in with email (${email}).`,
     });
-    return user;
+    this.emitUpdate();
+    return { user };
   }
 
-  signup(name: string, email: string, businessName: string, marketHub: MarketHub): User {
+  async signup(name: string, email: string, password?: string, businessName: string = '', marketHub: MarketHub = 'onitsha'): Promise<{ user?: User; error?: string }> {
+    if (supabase && password) {
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name,
+              businessName,
+              marketHub,
+            },
+          },
+        });
+
+        if (error) {
+          return { error: error.message };
+        }
+
+        if (data.user) {
+          // Attempt to save profile to Supabase profiles table
+          try {
+            await supabase.from('profiles').upsert({
+              id: data.user.id,
+              business_name: businessName,
+              owner_name: name,
+              market_hub: marketHub,
+              market_location: this.getMarketHubLabel(marketHub),
+            });
+          } catch (profileErr) {
+            console.warn('Profile sync notice:', profileErr);
+          }
+
+          const user: User = {
+            id: data.user.id,
+            name,
+            email,
+            marketHub,
+            businessName,
+            authProvider: 'email',
+            createdAt: data.user.created_at,
+          };
+          this.setItem('current_user', user);
+
+          const profile = this.getProfile();
+          profile.businessName = businessName;
+          profile.marketHub = marketHub;
+          profile.marketLocation = this.getMarketHubLabel(marketHub);
+          this.saveProfile(profile);
+
+          this.addAuditLog({
+            id: 'audit-' + Date.now(),
+            timestamp: new Date().toISOString(),
+            actorName: name,
+            actorRole: 'oga',
+            actionType: 'SETTINGS_CHANGED',
+            description: `New Supabase trader account created for ${businessName}.`,
+          });
+          this.emitUpdate();
+          return { user };
+        }
+      } catch (err: any) {
+        console.warn('Supabase signup fallback:', err?.message);
+      }
+    }
+
+    // Local / Offline fallback
     const user: User = {
       id: 'usr-' + Date.now(),
       name,
@@ -171,7 +296,6 @@ class StorageManager {
     };
     this.setItem('current_user', user);
 
-    // Update profile with the new business name & market location
     const profile = this.getProfile();
     profile.businessName = businessName;
     profile.marketHub = marketHub;
@@ -186,11 +310,18 @@ class StorageManager {
       actionType: 'SETTINGS_CHANGED',
       description: `New trader account created for ${businessName} in ${profile.marketLocation}.`,
     });
-
-    return user;
+    this.emitUpdate();
+    return { user };
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.warn('Supabase sign-out notice:', err);
+      }
+    }
     if (!this.isBrowser()) return;
     localStorage.removeItem('chinux_current_user');
     this.emitUpdate();

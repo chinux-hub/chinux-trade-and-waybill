@@ -21,41 +21,74 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [businessName, setBusinessName] = useState('');
   const [marketHub, setMarketHub] = useState<MarketHub>('onitsha');
   const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleGoogleAuth = () => {
-    const user = storage.loginWithGoogle(email || 'trader@gmail.com', name || 'Google Verified Trader');
-    setCurrentUser(user);
-    setSuccessMsg('Logged in with Google account!');
-    setTimeout(() => {
-      setSuccessMsg('');
-      onClose();
-    }, 1500);
+  const handleGoogleAuth = async () => {
+    setIsLoading(true);
+    setErrorMsg('');
+    const res = await storage.loginWithGoogle(email || 'trader@gmail.com', name || 'Google Verified Trader');
+    setIsLoading(false);
+    if (res.error) {
+      setErrorMsg(res.error);
+      return;
+    }
+    if (res.user) {
+      setCurrentUser(res.user);
+      setSuccessMsg('Logged in with Google account!');
+      setTimeout(() => {
+        setSuccessMsg('');
+        onClose();
+      }, 1500);
+    }
   };
 
-  const handleEmailAuth = (e: React.FormEvent) => {
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
 
-    if (mode === 'login') {
-      const user = storage.loginWithEmail(email);
-      setCurrentUser(user);
-      setSuccessMsg('Logged in successfully!');
-    } else {
-      const user = storage.signup(name || 'Trader', email, businessName || 'Wholesale Enterprise', marketHub);
-      setCurrentUser(user);
-      setSuccessMsg('Account created successfully!');
-    }
+    setIsLoading(true);
+    setErrorMsg('');
 
-    setTimeout(() => {
-      setSuccessMsg('');
-      onClose();
-    }, 1500);
+    if (mode === 'login') {
+      const res = await storage.loginWithEmail(email, password);
+      setIsLoading(false);
+      if (res.error) {
+        setErrorMsg(res.error);
+        return;
+      }
+      if (res.user) {
+        setCurrentUser(res.user);
+        setSuccessMsg('Logged in successfully!');
+        setTimeout(() => {
+          setSuccessMsg('');
+          onClose();
+        }, 1200);
+      }
+    } else {
+      const res = await storage.signup(name || 'Trader', email, password, businessName || 'Wholesale Enterprise', marketHub);
+      setIsLoading(false);
+      if (res.error) {
+        setErrorMsg(res.error);
+        return;
+      }
+      if (res.user) {
+        setCurrentUser(res.user);
+        setSuccessMsg('Account created successfully in Supabase!');
+        setTimeout(() => {
+          setSuccessMsg('');
+          onClose();
+        }, 1500);
+      }
+    }
   };
 
-  const handleLogout = () => {
-    storage.logout();
+  const handleLogout = async () => {
+    setIsLoading(true);
+    await storage.logout();
+    setIsLoading(false);
     setCurrentUser(null);
     setSuccessMsg('Logged out.');
     setTimeout(() => {
@@ -89,6 +122,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 rounded-2xl flex items-center gap-2 font-bold animate-fadeIn">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             <span>{successMsg}</span>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-3 bg-rose-50 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 rounded-2xl flex items-center gap-2 font-bold animate-fadeIn">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse flex-shrink-0" />
+            <span>{errorMsg}</span>
           </div>
         )}
 

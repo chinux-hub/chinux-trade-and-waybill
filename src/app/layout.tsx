@@ -15,6 +15,7 @@ import { BankConnectModal } from '@/components/BankConnectModal';
 import { DataExportModal } from '@/components/DataExportModal';
 import { SubscriptionModal } from '@/components/SubscriptionModal';
 import { UpdatePromptBanner } from '@/components/UpdatePromptBanner';
+import { AuthGuard } from '@/components/AuthGuard';
 import { usePathname } from 'next/navigation';
 
 export default function RootLayout({
@@ -36,6 +37,7 @@ export default function RootLayout({
   const isPublicLanding = pathname === '/welcome' || pathname === '/join';
 
   const [isOffline, setIsOffline] = useState(false);
+  const [dismissOffline, setDismissOffline] = useState(false);
 
   useEffect(() => {
     // Load theme from localStorage
@@ -93,12 +95,22 @@ export default function RootLayout({
         <UpdatePromptBanner />
 
         {/* Offline Mode Indicator Banner */}
-        {isOffline && (
-          <div className="bg-amber-600 text-white text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-md sticky top-0 z-50 animate-fadeIn">
-            <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse flex-shrink-0" />
-            <span>
-              ⚡ Offline Mode Active: You can continue creating waybills, stock & sales entries. Changes are stored locally on your device and will auto-sync to Supabase once reconnected.
-            </span>
+        {isOffline && !dismissOffline && (
+          <div className="bg-amber-600 text-white text-xs font-bold py-1.5 px-4 text-center flex items-center justify-between gap-2 shadow-md sticky top-0 z-50 animate-fadeIn">
+            <div className="flex items-center gap-2 mx-auto">
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
+              <span>
+                ⚡ Offline Mode: Working offline. All waybills & sales will auto-sync to Supabase once reconnected.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDismissOffline(true)}
+              className="p-1 hover:bg-amber-700 rounded-lg text-white shrink-0 text-xs font-bold"
+              title="Dismiss banner"
+            >
+              ✕
+            </button>
           </div>
         )}
 
@@ -124,7 +136,7 @@ export default function RootLayout({
 
         {/* Main Content Area */}
         <main className={`flex-1 w-full mx-auto ${isPublicLanding ? 'px-0 py-0 max-w-full' : 'px-4 sm:px-6 lg:px-8 py-6 max-w-7xl'}`}>
-          {children}
+          <AuthGuard>{children}</AuthGuard>
         </main>
 
         {/* Trader App Features Only (Hidden on Admin and Landing) */}

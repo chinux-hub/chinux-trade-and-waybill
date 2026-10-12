@@ -16,6 +16,16 @@ export default function AuditLogPage() {
   }, []);
 
   const filtered = logs.filter((log) => {
+    // Exclude platform user registrations & logins from trader's audit log (only trade/dispatch actions belong here)
+    const desc = (log.description || '').toLowerCase();
+    const isRegistrationOrLogin =
+      desc.includes('account created') ||
+      desc.includes('logged in') ||
+      desc.includes('supabase trader') ||
+      desc.includes('registered') ||
+      desc.includes('google account');
+    if (isRegistrationOrLogin) return false;
+
     if (filterActor === 'all') return true;
     return log.actorRole === filterActor;
   });
@@ -53,7 +63,7 @@ export default function AuditLogPage() {
               : 'bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
           }`}
         >
-          All Activity ({logs.length})
+          All Activity ({filtered.length})
         </button>
         <button
           onClick={() => setFilterActor('apprentice')}

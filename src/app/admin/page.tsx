@@ -24,9 +24,10 @@ import {
   EyeOff,
   LogOut,
   ShieldAlert,
+  Boxes,
 } from 'lucide-react';
 import { storage } from '@/lib/storage';
-import { PlatformPolicy, FeedbackItem, Waybill } from '@/types';
+import { PlatformPolicy, FeedbackItem, Waybill, PlatformRegistrationLog } from '@/types';
 import { formatNaira, formatDateTime } from '@/lib/formatters';
 
 export default function SuperAdminPage() {
@@ -42,6 +43,7 @@ export default function SuperAdminPage() {
   const [policy, setPolicy] = useState<PlatformPolicy>(storage.getPolicy());
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [waybills, setWaybills] = useState<Waybill[]>([]);
+  const [registrationLogs, setRegistrationLogs] = useState<PlatformRegistrationLog[]>([]);
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [isSaved, setIsSaved] = useState(false);
 
@@ -58,6 +60,7 @@ export default function SuperAdminPage() {
     setPolicy(storage.getPolicy());
     setFeedbacks(storage.getFeedbacks());
     setWaybills(storage.getWaybills());
+    setRegistrationLogs(storage.getPlatformRegistrationLogs());
   };
 
   const handleAuthenticate = (e: React.FormEvent) => {
@@ -106,6 +109,7 @@ export default function SuperAdminPage() {
 
   const totalWaybills = waybills.length;
   const totalVolume = waybills.reduce((acc, curr) => acc + (curr.totalValue || 0), 0);
+  const totalCartons = waybills.reduce((acc, curr) => acc + (curr.cartonCount || 0), 0);
   const registeredShopsCount = storage.getSavedAccounts().length > 0 ? storage.getSavedAccounts().length : (storage.getCurrentUser() ? 1 : 0);
   const openFeedbacks = feedbacks.filter((fb) => fb.status === 'open');
 
@@ -244,7 +248,7 @@ export default function SuperAdminPage() {
       </div>
 
       {/* Platform Macro Usage Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
             <span>Total Registered Traders</span>
@@ -258,13 +262,13 @@ export default function SuperAdminPage() {
 
         <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-            <span>Trade Volume Processed</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+            <span>Volume of Processed Goods</span>
+            <Boxes className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-emerald-400">
-            {formatNaira(totalVolume)}
+          <div className="text-2xl font-black text-amber-400">
+            {totalCartons.toLocaleString()} <span className="text-base font-bold text-slate-300">Cartons</span>
           </div>
-          <div className="text-[11px] text-slate-400">Total cargo & waybill value</div>
+          <div className="text-[11px] text-slate-400">Physical packages dispatched</div>
         </div>
 
         <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
@@ -280,13 +284,24 @@ export default function SuperAdminPage() {
 
         <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
           <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
-            <span>Open Feedback / Disputes</span>
+            <span>Gross Cargo Value</span>
+            <DollarSign className="w-4 h-4 text-emerald-400" />
+          </div>
+          <div className="text-2xl font-black text-emerald-400">
+            {formatNaira(totalVolume)}
+          </div>
+          <div className="text-[11px] text-slate-400">Total trade value processed</div>
+        </div>
+
+        <div className="p-5 rounded-3xl bg-slate-900 border border-slate-800 shadow-md space-y-1">
+          <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+            <span>Open Inquiries / Feedback</span>
             <MessageSquare className="w-4 h-4 text-rose-400" />
           </div>
           <div className="text-2xl font-black text-rose-400">
             {openFeedbacks.length} Pending
           </div>
-          <div className="text-[11px] text-slate-400">Requires response below</div>
+          <div className="text-[11px] text-slate-400">Requires founder review below</div>
         </div>
       </div>
 
@@ -440,6 +455,86 @@ export default function SuperAdminPage() {
             <span>Push App Update to All Devices</span>
           </button>
         </div>
+      </div>
+
+      {/* Registered Traders & User Accounts Roster */}
+      <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 shadow-md text-white space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-extrabold text-white flex items-center gap-2">
+              <Users className="w-5 h-5 text-emerald-400" />
+              Registered Traders & User Accounts Roster
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Comprehensive founder registry of registered shops, apprentices, and active merchant profiles across Nigeria.
+            </p>
+          </div>
+          <span className="text-xs font-bold px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl self-start sm:self-auto">
+            {registrationLogs.length} Registered User{registrationLogs.length === 1 ? '' : 's'}
+          </span>
+        </div>
+
+        {registrationLogs.length === 0 ? (
+          <div className="p-8 text-center rounded-2xl bg-slate-950/60 border border-slate-800 text-slate-400 space-y-2">
+            <Users className="w-8 h-8 text-slate-600 mx-auto" />
+            <p className="text-xs font-semibold">No registered users recorded yet.</p>
+            <p className="text-[11px] text-slate-500">
+              When new traders sign up with Supabase or join as apprentices, their profiles will populate here automatically.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border border-slate-800">
+            <table className="w-full text-left text-xs text-slate-300">
+              <thead className="bg-slate-950/80 text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                <tr>
+                  <th className="py-3 px-4 font-bold">Trader / Name</th>
+                  <th className="py-3 px-4 font-bold">Business Name</th>
+                  <th className="py-3 px-4 font-bold">Market Hub & Location</th>
+                  <th className="py-3 px-4 font-bold">Role</th>
+                  <th className="py-3 px-4 font-bold">Email / Contact</th>
+                  <th className="py-3 px-4 font-bold">Registered At</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60 bg-slate-900/50">
+                {registrationLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="py-3 px-4 font-bold text-white">
+                      {log.userName || 'Unnamed Trader'}
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-emerald-400">
+                      {log.businessName || '—'}
+                    </td>
+                    <td className="py-3 px-4 text-slate-300">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="font-medium text-slate-200">{log.marketHub || 'Onitsha Main'}</span>
+                        {log.marketLocation && (
+                          <span className="text-[11px] text-slate-400">({log.marketLocation})</span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full ${
+                          log.role === 'oga'
+                            ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+                            : 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
+                        }`}
+                      >
+                        {log.role === 'oga' ? 'Oga (Merchant)' : 'Nwa Boy (Apprentice)'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
+                      {log.email || '—'}
+                    </td>
+                    <td className="py-3 px-4 text-slate-400 text-[11px] whitespace-nowrap">
+                      {formatDateTime(log.timestamp)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* User Feedback & Dispute Resolution Desk */}

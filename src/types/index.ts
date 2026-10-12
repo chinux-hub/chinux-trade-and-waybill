@@ -45,6 +45,7 @@ export interface BankTransaction {
 
 export interface TraderProfile {
   businessName: string;
+  ownerName?: string;
   tagline: string;
   phone: string;
   marketLocation: string; // e.g. "Zone B, Main Market, Onitsha" or "Boutique Line, Trade Fair Complex, Lagos"
@@ -186,4 +187,15 @@ export interface PlatformPolicy {
   totalTradersRegistered: number;
   totalPlatformTradeVolume: number;
   appVersion: string;
+}
+
+export interface PlatformRegistrationLog {
+  id: string;
+  timestamp: string;
+  userName: string;
+  email: string;
+  businessName: string;
+  marketHub: MarketHub;
+  marketLocation: string;
+  role: Role;
 }

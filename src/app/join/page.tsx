@@ -40,8 +40,8 @@ function JoinApprenticeContent() {
     if (joined) {
       setSuccessMsg('Successfully connected to Master Shop! Redirecting to Apprentice Dashboard...');
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
+        window.location.href = '/dashboard';
+      }, 1200);
     } else {
       setIsSubmitting(false);
       setErrorMsg('Invalid invitation code. Please ask your Oga for the correct code.');

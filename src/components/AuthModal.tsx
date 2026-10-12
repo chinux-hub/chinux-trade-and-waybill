@@ -61,11 +61,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       }
       if (res.user) {
         setCurrentUser(res.user);
-        setSuccessMsg('Logged in successfully!');
+        setSuccessMsg('Logged in successfully! Entering Oga Dashboard...');
         setTimeout(() => {
           setSuccessMsg('');
           onClose();
-        }, 1200);
+          window.location.href = '/dashboard';
+        }, 900);
       }
     } else {
       const res = await storage.signup(name || 'Trader', email, password, businessName || 'Wholesale Enterprise', marketHub);
@@ -76,11 +77,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       }
       if (res.user) {
         setCurrentUser(res.user);
-        setSuccessMsg('Account created successfully in Supabase!');
+        setSuccessMsg('Wholesale account created! Launching Oga View...');
         setTimeout(() => {
           setSuccessMsg('');
           onClose();
-        }, 1500);
+          window.location.href = '/dashboard';
+        }, 900);
       }
     }
   };

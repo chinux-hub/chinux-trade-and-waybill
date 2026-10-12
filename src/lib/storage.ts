@@ -12,6 +12,7 @@ import {
   ConnectedBank,
   BankTransaction,
   MarketHub,
+  PlatformRegistrationLog,
 } from '@/types';
 import { supabase } from './supabase';
 
@@ -105,7 +106,14 @@ class StorageManager {
   // USER AUTHENTICATION & MULTI-ACCOUNT SWITCHING
   // ==========================================
   getCurrentUser(): User | null {
-    return this.getItem<User | null>('current_user', null);
+    const user = this.getItem<User | null>('current_user', null);
+    if (user) return user;
+    // When offline, automatically restore and show the last account signed into
+    const lastUser = this.getItem<User | null>('last_signed_in_user', null);
+    if (lastUser) {
+      return lastUser;
+    }
+    return null;
   }
 
   getSavedAccounts(): User[] {
@@ -115,6 +123,7 @@ class StorageManager {
   saveAccount(user: User): void {
     const current = this.getSavedAccounts().filter((a) => a.id !== user.id && a.email !== user.email);
     this.setItem('saved_accounts', [user, ...current]);
+    this.setItem('last_signed_in_user', user);
   }
 
   switchAccount(user: User): void {
@@ -201,14 +210,14 @@ class StorageManager {
           };
           this.setItem('current_user', user);
           this.saveAccount(user);
-          this.addAuditLog({
-            id: 'audit-' + Date.now(),
-            timestamp: new Date().toISOString(),
-            actorName: user.name,
-            actorRole: 'oga',
-            actionType: 'SETTINGS_CHANGED',
-            description: `Logged in securely via Supabase (${email}).`,
-          });
+
+          // Restore Oga role if not an apprentice account
+          const profile = this.getProfile();
+          if (!profile.isApprenticeAccount) {
+            profile.activeRole = 'oga';
+            this.saveProfile(profile);
+          }
+
           this.emitUpdate();
           return { user };
         }
@@ -229,14 +238,14 @@ class StorageManager {
     };
     this.setItem('current_user', user);
     this.saveAccount(user);
-    this.addAuditLog({
-      id: 'audit-' + Date.now(),
-      timestamp: new Date().toISOString(),
-      actorName: user.name,
-      actorRole: 'oga',
-      actionType: 'SETTINGS_CHANGED',
-      description: `Logged in with email (${email}).`,
-    });
+
+    // Restore Oga role if not an apprentice account
+    const profile = this.getProfile();
+    if (!profile.isApprenticeAccount) {
+      profile.activeRole = 'oga';
+      this.saveProfile(profile);
+    }
+
     this.emitUpdate();
     return { user };
   }
@@ -269,6 +278,8 @@ class StorageManager {
               owner_name: name,
               market_hub: marketHub,
               market_location: this.getMarketHubLabel(marketHub),
+              active_role: 'oga',
+              is_apprentice_account: false,
             });
           } catch (profileErr) {
             console.warn('Profile sync notice:', profileErr);
@@ -286,20 +297,30 @@ class StorageManager {
           this.setItem('current_user', user);
           this.saveAccount(user);
 
+          // Force full Oga sovereignty view for new business registration
           const profile = this.getProfile();
+          profile.ownerName = name;
           profile.businessName = businessName;
           profile.marketHub = marketHub;
           profile.marketLocation = this.getMarketHubLabel(marketHub);
+          profile.activeRole = 'oga';
+          profile.isApprenticeAccount = false;
+          profile.masterShopId = undefined;
+          profile.masterShopName = undefined;
           this.saveProfile(profile);
 
-          this.addAuditLog({
-            id: 'audit-' + Date.now(),
+          // Register in Admin Platform Roster (not trader audit log)
+          this.addPlatformRegistrationLog({
+            id: 'reg-' + Date.now(),
             timestamp: new Date().toISOString(),
-            actorName: name,
-            actorRole: 'oga',
-            actionType: 'SETTINGS_CHANGED',
-            description: `New Supabase trader account created for ${businessName}.`,
+            userName: name,
+            email,
+            businessName,
+            marketHub,
+            marketLocation: this.getMarketHubLabel(marketHub),
+            role: 'oga',
           });
+
           this.emitUpdate();
           return { user };
         }
@@ -321,20 +342,30 @@ class StorageManager {
     this.setItem('current_user', user);
     this.saveAccount(user);
 
+    // Force full Oga sovereignty view for new business registration
     const profile = this.getProfile();
+    profile.ownerName = name;
     profile.businessName = businessName;
     profile.marketHub = marketHub;
     profile.marketLocation = this.getMarketHubLabel(marketHub);
+    profile.activeRole = 'oga';
+    profile.isApprenticeAccount = false;
+    profile.masterShopId = undefined;
+    profile.masterShopName = undefined;
     this.saveProfile(profile);
 
-    this.addAuditLog({
-      id: 'audit-' + Date.now(),
+    // Register in Admin Platform Roster (not trader audit log)
+    this.addPlatformRegistrationLog({
+      id: 'reg-' + Date.now(),
       timestamp: new Date().toISOString(),
-      actorName: name,
-      actorRole: 'oga',
-      actionType: 'SETTINGS_CHANGED',
-      description: `New trader account created for ${businessName} in ${profile.marketLocation}.`,
+      userName: name,
+      email,
+      businessName,
+      marketHub,
+      marketLocation: this.getMarketHubLabel(marketHub),
+      role: 'oga',
     });
+
     this.emitUpdate();
     return { user };
   }
@@ -349,6 +380,7 @@ class StorageManager {
     }
     if (!this.isBrowser()) return;
     localStorage.removeItem('chinux_current_user');
+    localStorage.removeItem('chinux_last_signed_in_user');
     this.emitUpdate();
   }
 
@@ -418,17 +450,74 @@ class StorageManager {
     profile.activeRole = 'apprentice';
     this.saveProfile(profile);
 
-    this.addAuditLog({
-      id: 'audit-' + Date.now(),
+    const apprenticeUser: User = {
+      id: 'appr-' + Date.now(),
+      name: apprenticeName || 'Nwaboyi (Apprentice)',
+      email: `${(apprenticeName || 'apprentice').toLowerCase().replace(/\s+/g, '')}@apprentice.chinux`,
+      marketHub: profile.marketHub,
+      businessName: profile.businessName,
+      authProvider: 'email',
+      createdAt: new Date().toISOString(),
+    };
+    this.setItem('current_user', apprenticeUser);
+    this.setItem('last_signed_in_user', apprenticeUser);
+    this.saveAccount(apprenticeUser);
+
+    this.addPlatformRegistrationLog({
+      id: 'reg-' + Date.now(),
       timestamp: new Date().toISOString(),
-      actorName: apprenticeName || 'Nwaboyi (Apprentice)',
-      actorRole: 'apprentice',
-      actionType: 'SETTINGS_CHANGED',
-      description: `Apprentice ${apprenticeName} hooked into ${profile.businessName} via invite code ${inviteCode}.`,
+      userName: apprenticeName || 'Nwaboyi',
+      email: apprenticeUser.email,
+      businessName: profile.businessName,
+      marketHub: profile.marketHub,
+      marketLocation: profile.marketLocation,
+      role: 'apprentice',
     });
 
     this.emitUpdate();
     return true;
+  }
+
+  // ==========================================
+  // PLATFORM USER REGISTRATIONS (ADMIN ROSTER)
+  // ==========================================
+  getPlatformRegistrationLogs(): PlatformRegistrationLog[] {
+    const defaultLogs: PlatformRegistrationLog[] = [
+      {
+        id: 'reg-demo-1',
+        timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
+        userName: 'Chief Chinua Okonkwo',
+        email: 'chinux.imports@gmail.com',
+        businessName: 'Chinux Global Auto Spares Ltd',
+        marketHub: 'onitsha',
+        marketLocation: 'Main Market & Bridgehead, Onitsha',
+        role: 'oga',
+      },
+      {
+        id: 'reg-demo-2',
+        timestamp: new Date(Date.now() - 86400000).toISOString(),
+        userName: 'Alhaji Danladi Motors',
+        email: 'danladi.motors@yahoo.com',
+        businessName: 'Danladi Heavy Haulage Parts',
+        marketHub: 'trade_fair_lagos',
+        marketLocation: 'Trade Fair Complex (Badagry Exp.), Lagos',
+        role: 'oga',
+      },
+    ];
+    return this.getItem<PlatformRegistrationLog[]>('platform_registrations', defaultLogs);
+  }
+
+  addPlatformRegistrationLog(log: PlatformRegistrationLog): void {
+    const existing = this.getPlatformRegistrationLogs();
+    const filtered = existing.filter((r) => r.email !== log.email && r.id !== log.id);
+    const updated = [log, ...filtered];
+    this.setItem('platform_registrations', updated);
+
+    // Update macro stats policy
+    const policy = this.getPolicy();
+    policy.totalTradersRegistered = updated.length;
+    this.savePolicy(policy);
+    this.emitUpdate();
   }
 
   // ==========================================

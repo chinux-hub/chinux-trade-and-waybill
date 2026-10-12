@@ -119,12 +119,27 @@ class StorageManager {
   }
 
   getSavedAccounts(): User[] {
-    return this.getItem<User[]>('saved_accounts', []);
+    const allAccounts = this.getItem<User[]>('saved_accounts', []);
+    const currentUser = this.getItem<User | null>('current_user', null);
+    if (!currentUser) return [];
+
+    // Privacy & Security Enforcement:
+    // A trader should ONLY see themselves and the apprentices belonging to their shop.
+    // They should NOT see other traders or the platform super-admin.
+    return allAccounts.filter((acc) => {
+      if (acc.id === currentUser.id) return true;
+      // If current user is Oga, only show apprentices joined under this shop
+      if (currentUser.role !== 'apprentice') {
+        return acc.role === 'apprentice' && (acc.shopId === currentUser.id || acc.businessName === currentUser.businessName);
+      }
+      return false;
+    });
   }
 
   saveAccount(user: User): void {
-    const current = this.getSavedAccounts().filter((a) => a.id !== user.id && a.email !== user.email);
-    this.setItem('saved_accounts', [user, ...current]);
+    const all = this.getItem<User[]>('saved_accounts', []);
+    const filtered = all.filter((a) => a.id !== user.id && a.email !== user.email);
+    this.setItem('saved_accounts', [user, ...filtered]);
     this.setItem('last_signed_in_user', user);
   }
 
@@ -132,19 +147,37 @@ class StorageManager {
     this.setItem('current_user', user);
     this.saveAccount(user);
     const profile = this.getProfile();
-    if (user.businessName) profile.businessName = user.businessName;
-    if (user.marketHub) {
-      profile.marketHub = user.marketHub;
-      profile.marketLocation = this.getMarketHubLabel(user.marketHub);
+    if (user.role === 'apprentice') {
+      profile.activeRole = 'apprentice';
+      profile.isApprenticeAccount = true;
+    } else {
+      profile.activeRole = 'oga';
+      profile.isApprenticeAccount = false;
+      if (user.businessName) profile.businessName = user.businessName;
+      if (user.marketHub) {
+        profile.marketHub = user.marketHub;
+        profile.marketLocation = this.getMarketHubLabel(user.marketHub);
+      }
     }
     this.saveProfile(profile);
     this.emitUpdate();
   }
 
   removeSavedAccount(userId: string): void {
-    const filtered = this.getSavedAccounts().filter((a) => a.id !== userId);
+    const all = this.getItem<User[]>('saved_accounts', []);
+    const filtered = all.filter((a) => a.id !== userId);
     this.setItem('saved_accounts', filtered);
     this.emitUpdate();
+  }
+
+  // Wipes all shop data for a brand-new user sign up (fresh day-1 page)
+  resetShopDataForNewAccount(): void {
+    if (!this.isBrowser()) return;
+    localStorage.removeItem('chinux_waybills');
+    localStorage.removeItem('chinux_sales');
+    localStorage.removeItem('chinux_customers');
+    localStorage.removeItem('chinux_audit');
+    localStorage.removeItem('chinux_bank_txs');
   }
 
   async loginWithGoogle(email: string = 'trader@gmail.com', name: string = 'Google Trader'): Promise<{ user?: User; error?: string }> {
@@ -295,9 +328,13 @@ class StorageManager {
             businessName,
             authProvider: 'email',
             createdAt: data.user.created_at,
+            role: 'oga',
           };
           this.setItem('current_user', user);
           this.saveAccount(user);
+
+          // Brand-new sign up gets a fresh day-1 shop state (clearing previous shop items on this device)
+          this.resetShopDataForNewAccount();
 
           // Force full Oga sovereignty view for new business registration
           const profile = this.getProfile();
@@ -309,6 +346,7 @@ class StorageManager {
           profile.isApprenticeAccount = false;
           profile.masterShopId = undefined;
           profile.masterShopName = undefined;
+          profile.joinedApprentices = [];
           this.saveProfile(profile);
 
           // Register in Admin Platform Roster (not trader audit log)
@@ -321,6 +359,7 @@ class StorageManager {
             marketHub,
             marketLocation: this.getMarketHubLabel(marketHub),
             role: 'oga',
+            status: 'active',
           });
 
           this.emitUpdate();
@@ -340,9 +379,13 @@ class StorageManager {
       businessName,
       authProvider: 'email',
       createdAt: new Date().toISOString(),
+      role: 'oga',
     };
     this.setItem('current_user', user);
     this.saveAccount(user);
+
+    // Brand-new sign up gets a fresh day-1 shop state
+    this.resetShopDataForNewAccount();
 
     // Force full Oga sovereignty view for new business registration
     const profile = this.getProfile();
@@ -354,6 +397,7 @@ class StorageManager {
     profile.isApprenticeAccount = false;
     profile.masterShopId = undefined;
     profile.masterShopName = undefined;
+    profile.joinedApprentices = [];
     this.saveProfile(profile);
 
     // Register in Admin Platform Roster (not trader audit log)
@@ -366,6 +410,7 @@ class StorageManager {
       marketHub,
       marketLocation: this.getMarketHubLabel(marketHub),
       role: 'oga',
+      status: 'active',
     });
 
     this.emitUpdate();
@@ -460,10 +505,25 @@ class StorageManager {
       businessName: profile.businessName,
       authProvider: 'email',
       createdAt: new Date().toISOString(),
+      role: 'apprentice',
+      shopId: profile.businessName,
     };
     this.setItem('current_user', apprenticeUser);
     this.setItem('last_signed_in_user', apprenticeUser);
     this.saveAccount(apprenticeUser);
+
+    // Record apprentice in master shop profile
+    const currentList = profile.joinedApprentices || [];
+    profile.joinedApprentices = [
+      ...currentList.filter((a) => a.email !== apprenticeUser.email),
+      {
+        id: apprenticeUser.id,
+        name: apprenticeUser.name,
+        email: apprenticeUser.email,
+        joinedAt: new Date().toISOString(),
+      },
+    ];
+    this.saveProfile(profile);
 
     this.addPlatformRegistrationLog({
       id: 'reg-' + Date.now(),
@@ -474,6 +534,7 @@ class StorageManager {
       marketHub: profile.marketHub,
       marketLocation: profile.marketLocation,
       role: 'apprentice',
+      status: 'active',
     });
 
     this.emitUpdate();
@@ -517,7 +578,54 @@ class StorageManager {
 
     // Update macro stats policy
     const policy = this.getPolicy();
-    policy.totalTradersRegistered = updated.length;
+    policy.totalTradersRegistered = updated.filter((r) => r.status !== 'deleted').length;
+    this.savePolicy(policy);
+    this.emitUpdate();
+  }
+
+  deletePlatformAccount(id: string): void {
+    const list = this.getPlatformRegistrationLogs();
+    const updated = list.map((item) => {
+      if (item.id === id) {
+        return {
+          ...item,
+          status: 'deleted' as const,
+          deletedAt: new Date().toISOString(),
+        };
+      }
+      return item;
+    });
+    this.setItem('platform_registrations', updated);
+
+    // Also remove from saved accounts if matching
+    const target = list.find((r) => r.id === id);
+    if (target?.email) {
+      const allAccounts = this.getItem<User[]>('saved_accounts', []);
+      this.setItem('saved_accounts', allAccounts.filter((a) => a.email !== target.email));
+    }
+
+    const policy = this.getPolicy();
+    policy.totalTradersRegistered = updated.filter((r) => r.status !== 'deleted').length;
+    this.savePolicy(policy);
+    this.emitUpdate();
+  }
+
+  restorePlatformAccount(id: string): void {
+    const list = this.getPlatformRegistrationLogs();
+    const updated = list.map((item) => {
+      if (item.id === id) {
+        return {
+          ...item,
+          status: 'active' as const,
+          deletedAt: undefined,
+        };
+      }
+      return item;
+    });
+    this.setItem('platform_registrations', updated);
+
+    const policy = this.getPolicy();
+    policy.totalTradersRegistered = updated.filter((r) => r.status !== 'deleted').length;
     this.savePolicy(policy);
     this.emitUpdate();
   }

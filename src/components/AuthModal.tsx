@@ -152,11 +152,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Saved Accounts for 1-Click Switch */}
+            {/* Connected Apprentices for this Shop (1-Click Switch) */}
             {storage.getSavedAccounts().filter((acc) => acc.id !== currentUser.id).length > 0 && (
               <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                  Switch to Another Shop / Account:
+                  Connected Apprentices for this Shop:
                 </span>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto">
                   {storage.getSavedAccounts()

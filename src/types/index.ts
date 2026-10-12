@@ -17,6 +17,8 @@ export interface User {
   businessName: string;
   authProvider: 'google' | 'email';
   createdAt: string;
+  role?: Role;
+  shopId?: string;
 }
 
 export interface ConnectedBank {
@@ -67,6 +69,7 @@ export interface TraderProfile {
   isApprenticeAccount?: boolean;
   masterShopName?: string;
   masterShopId?: string;
+  joinedApprentices?: { id: string; name: string; joinedAt: string; email: string }[];
 }
 
 export interface OgaPermissions {
@@ -200,4 +203,6 @@ export interface PlatformRegistrationLog {
   marketHub: MarketHub;
   marketLocation: string;
   role: Role;
+  status?: 'active' | 'suspended' | 'deleted';
+  deletedAt?: string;
 }

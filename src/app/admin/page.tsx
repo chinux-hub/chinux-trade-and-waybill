@@ -26,6 +26,8 @@ import {
   ShieldAlert,
   Boxes,
   CreditCard,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { PlatformPolicy, FeedbackItem, Waybill, PlatformRegistrationLog } from '@/types';
@@ -132,6 +134,22 @@ export default function SuperAdminPage() {
     storage.resolveFeedback(id, reply);
     setFeedbacks(storage.getFeedbacks());
     setReplyTexts((prev) => ({ ...prev, [id]: '' }));
+  };
+
+  const handleDeleteAccount = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to suspend/delete ${name}'s account from Chinux? They will be flagged and removed from active trader logins.`)) {
+      storage.deletePlatformAccount(id);
+      setRegistrationLogs(storage.getPlatformRegistrationLogs());
+      setPolicy(storage.getPolicy());
+    }
+  };
+
+  const handleRestoreAccount = (id: string, name: string) => {
+    if (confirm(`Restore ${name}'s account back to active standing?`)) {
+      storage.restorePlatformAccount(id);
+      setRegistrationLogs(storage.getPlatformRegistrationLogs());
+      setPolicy(storage.getPolicy());
+    }
   };
 
   // IF NOT AUTHENTICATED: RENDER HIGH-SECURITY ACCESS BARRIER (ZERO DATA LEAK)
@@ -541,45 +559,96 @@ export default function SuperAdminPage() {
                   <th className="py-3 px-4 font-bold">Market Hub & Location</th>
                   <th className="py-3 px-4 font-bold">Role</th>
                   <th className="py-3 px-4 font-bold">Email / Contact</th>
+                  <th className="py-3 px-4 font-bold">Status</th>
                   <th className="py-3 px-4 font-bold">Registered At</th>
+                  <th className="py-3 px-4 font-bold text-right">Admin Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 bg-slate-900/50">
-                {registrationLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-3 px-4 font-bold text-white">
-                      {log.userName || 'Unnamed Trader'}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-emerald-400">
-                      {log.businessName || '—'}
-                    </td>
-                    <td className="py-3 px-4 text-slate-300">
-                      <span className="inline-flex items-center gap-1">
-                        <span className="font-medium text-slate-200">{log.marketHub || 'Onitsha Main'}</span>
-                        {log.marketLocation && (
-                          <span className="text-[11px] text-slate-400">({log.marketLocation})</span>
+                {registrationLogs.map((log) => {
+                  const isDeleted = log.status === 'deleted';
+                  return (
+                    <tr
+                      key={log.id}
+                      className={`hover:bg-slate-800/40 transition-colors ${
+                        isDeleted ? 'opacity-50 bg-rose-950/10' : ''
+                      }`}
+                    >
+                      <td className="py-3 px-4 font-bold text-white">
+                        <div className="flex items-center gap-2">
+                          <span>{log.userName || 'Unnamed Trader'}</span>
+                          {isDeleted && (
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                              Suspended
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-semibold text-emerald-400">
+                        {log.businessName || '—'}
+                      </td>
+                      <td className="py-3 px-4 text-slate-300">
+                        <span className="inline-flex items-center gap-1">
+                          <span className="font-medium text-slate-200">{log.marketHub || 'Onitsha Main'}</span>
+                          {log.marketLocation && (
+                            <span className="text-[11px] text-slate-400">({log.marketLocation})</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full ${
+                            log.role === 'oga'
+                              ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
+                              : 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
+                          }`}
+                        >
+                          {log.role === 'oga' ? 'Oga (Merchant)' : 'Nwa Boy (Apprentice)'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
+                        {log.email || '—'}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isDeleted
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                              : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          }`}
+                        >
+                          {isDeleted ? 'Deleted' : 'Active'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-400 text-[11px] whitespace-nowrap">
+                        {formatDateTime(log.timestamp)}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        {isDeleted ? (
+                          <button
+                            type="button"
+                            onClick={() => handleRestoreAccount(log.id, log.userName)}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white font-bold text-[10px] transition-all inline-flex items-center gap-1"
+                            title="Restore account standing"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span>Restore</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAccount(log.id, log.userName)}
+                            className="px-2.5 py-1 rounded-lg bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-[10px] transition-all inline-flex items-center gap-1"
+                            title="Delete or suspend account"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Delete</span>
+                          </button>
                         )}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full ${
-                          log.role === 'oga'
-                            ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-400'
-                            : 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
-                        }`}
-                      >
-                        {log.role === 'oga' ? 'Oga (Merchant)' : 'Nwa Boy (Apprentice)'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
-                      {log.email || '—'}
-                    </td>
-                    <td className="py-3 px-4 text-slate-400 text-[11px] whitespace-nowrap">
-                      {formatDateTime(log.timestamp)}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

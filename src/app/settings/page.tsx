@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Settings, ShieldCheck, Building2, CreditCard, Save, ArrowLeft, CheckCircle2, UserPlus, Share2, Copy, Smartphone, Sparkles } from 'lucide-react';
+import { Settings, ShieldCheck, ShieldAlert, Building2, CreditCard, Save, ArrowLeft, CheckCircle2, UserPlus, Share2, Copy, Smartphone, Sparkles } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { TraderProfile, OgaPermissions } from '@/types';
 
@@ -15,7 +15,11 @@ export default function SettingsPage() {
     setProfile(storage.getProfile());
   }, []);
 
+  const isApprentice = profile.activeRole === 'apprentice' || profile.isApprenticeAccount;
+
   const handleTogglePermission = (key: keyof OgaPermissions) => {
+    // Security check: Apprentices cannot alter Oga permissions
+    if (isApprentice) return;
     setProfile((prev) => ({
       ...prev,
       permissions: {
@@ -131,14 +135,25 @@ export default function SettingsPage() {
         </div>
 
         {/* Oga Sovereignty & Apprentice Privacy Toggles */}
-        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
-            <ShieldCheck className="w-5 h-5 text-emerald-600" />
-            <span>Apprentice (Nwaboyi) Access Permissions</span>
+        {isApprentice ? (
+          <div className="p-6 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-300 shadow-sm space-y-2">
+            <div className="flex items-center gap-2 font-black text-sm">
+              <ShieldAlert className="w-5 h-5 text-amber-400" />
+              <span>Apprentice Access Restricted</span>
+            </div>
+            <p className="text-xs text-amber-200/80">
+              Only the shop Oga (Merchant Owner) can view or modify business permissions, cost masks, and profit rules.
+            </p>
           </div>
-          <p className="text-xs text-slate-500">
-            Control exactly what your sales boys can see or edit. Every action and price change is automatically logged in the Audit Log.
-          </p>
+        ) : (
+          <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+              <span>Apprentice (Nwaboyi) Access Permissions</span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Control exactly what your sales boys can see or edit. Every action and price change is automatically logged in the Audit Log.
+            </p>
 
           <div className="divide-y divide-slate-100 dark:divide-slate-800 space-y-3 pt-2">
             <div className="flex items-center justify-between pt-2">
@@ -286,6 +301,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
 
         {/* Shop Profile & Location */}
         <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">

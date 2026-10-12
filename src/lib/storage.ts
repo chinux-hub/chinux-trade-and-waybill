@@ -102,18 +102,38 @@ class StorageManager {
   }
 
   // ==========================================
-  // USER AUTHENTICATION (Google & Email)
+  // USER AUTHENTICATION & MULTI-ACCOUNT SWITCHING
   // ==========================================
   getCurrentUser(): User | null {
-    return this.getItem<User | null>('current_user', {
-      id: 'usr-default',
-      name: 'Oga Chinua',
-      email: 'trader@chinux.ng',
-      marketHub: 'onitsha',
-      businessName: 'Chinux Global Ventures',
-      authProvider: 'google',
-      createdAt: new Date().toISOString(),
-    });
+    return this.getItem<User | null>('current_user', null);
+  }
+
+  getSavedAccounts(): User[] {
+    return this.getItem<User[]>('saved_accounts', []);
+  }
+
+  saveAccount(user: User): void {
+    const current = this.getSavedAccounts().filter((a) => a.id !== user.id && a.email !== user.email);
+    this.setItem('saved_accounts', [user, ...current]);
+  }
+
+  switchAccount(user: User): void {
+    this.setItem('current_user', user);
+    this.saveAccount(user);
+    const profile = this.getProfile();
+    if (user.businessName) profile.businessName = user.businessName;
+    if (user.marketHub) {
+      profile.marketHub = user.marketHub;
+      profile.marketLocation = this.getMarketHubLabel(user.marketHub);
+    }
+    this.saveProfile(profile);
+    this.emitUpdate();
+  }
+
+  removeSavedAccount(userId: string): void {
+    const filtered = this.getSavedAccounts().filter((a) => a.id !== userId);
+    this.setItem('saved_accounts', filtered);
+    this.emitUpdate();
   }
 
   async loginWithGoogle(email: string = 'trader@gmail.com', name: string = 'Google Trader'): Promise<{ user?: User; error?: string }> {
@@ -144,6 +164,7 @@ class StorageManager {
       createdAt: new Date().toISOString(),
     };
     this.setItem('current_user', user);
+    this.saveAccount(user);
     this.addAuditLog({
       id: 'audit-' + Date.now(),
       timestamp: new Date().toISOString(),
@@ -179,6 +200,7 @@ class StorageManager {
             createdAt: data.user.created_at,
           };
           this.setItem('current_user', user);
+          this.saveAccount(user);
           this.addAuditLog({
             id: 'audit-' + Date.now(),
             timestamp: new Date().toISOString(),
@@ -206,6 +228,7 @@ class StorageManager {
       createdAt: new Date().toISOString(),
     };
     this.setItem('current_user', user);
+    this.saveAccount(user);
     this.addAuditLog({
       id: 'audit-' + Date.now(),
       timestamp: new Date().toISOString(),
@@ -261,6 +284,7 @@ class StorageManager {
             createdAt: data.user.created_at,
           };
           this.setItem('current_user', user);
+          this.saveAccount(user);
 
           const profile = this.getProfile();
           profile.businessName = businessName;
@@ -295,6 +319,7 @@ class StorageManager {
       createdAt: new Date().toISOString(),
     };
     this.setItem('current_user', user);
+    this.saveAccount(user);
 
     const profile = this.getProfile();
     profile.businessName = businessName;

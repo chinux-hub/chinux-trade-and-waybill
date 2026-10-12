@@ -35,11 +35,20 @@ export default function RootLayout({
   const isAdminPage = pathname?.startsWith('/admin');
   const isPublicLanding = pathname === '/welcome' || pathname === '/join';
 
+  const [isOffline, setIsOffline] = useState(false);
+
   useEffect(() => {
     // Load theme from localStorage
     const savedTheme = localStorage.getItem('chinux_theme') || 'dark';
     setTheme(savedTheme);
     document.documentElement.className = savedTheme;
+
+    // Connectivity status
+    setIsOffline(!navigator.onLine);
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
@@ -48,6 +57,11 @@ export default function RootLayout({
         .then((reg) => console.log('Chinux PWA Service Worker Registered:', reg.scope))
         .catch((err) => console.log('Service Worker registration failed:', err));
     }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const handleToggleTheme = (newTheme: string) => {
@@ -77,6 +91,16 @@ export default function RootLayout({
         
         {/* App Update Available Floating Banner */}
         <UpdatePromptBanner />
+
+        {/* Offline Mode Indicator Banner */}
+        {isOffline && (
+          <div className="bg-amber-600 text-white text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2 shadow-md sticky top-0 z-50 animate-fadeIn">
+            <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse flex-shrink-0" />
+            <span>
+              ⚡ Offline Mode Active: You can continue creating waybills, stock & sales entries. Changes are stored locally on your device and will auto-sync to Supabase once reconnected.
+            </span>
+          </div>
+        )}
 
         {/* If Admin Page, show dedicated Admin Header; otherwise show Trader Header (unless public landing) */}
         {isAdminPage ? (

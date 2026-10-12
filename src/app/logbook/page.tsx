@@ -2,7 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BookOpen, Plus, DollarSign, TrendingUp, Lock, CheckCircle2, ArrowLeft, ShieldAlert } from 'lucide-react';
+import {
+  BookOpen,
+  Plus,
+  DollarSign,
+  TrendingUp,
+  Lock,
+  CheckCircle2,
+  ArrowLeft,
+  ShieldAlert,
+  Download,
+  FileSpreadsheet,
+  Printer,
+} from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { SalesLog, TraderProfile } from '@/types';
 import { formatNaira } from '@/lib/formatters';
@@ -45,6 +57,55 @@ export default function LogbookPage() {
   const liveCost = numCost * numQty;
   const liveProfit = liveRevenue - liveCost;
   const liveMargin = liveRevenue > 0 ? ((liveProfit / liveRevenue) * 100).toFixed(1) : '0';
+
+  const handleDownloadCSV = () => {
+    if (sales.length === 0) {
+      alert('No sales records to download yet.');
+      return;
+    }
+
+    const headers = [
+      'Date',
+      'Product Name',
+      'Quantity',
+      'Selling Price (NGN)',
+      'Total Revenue (NGN)',
+      canViewCost ? 'Cost Price (NGN)' : 'Cost Price',
+      canViewProfit ? 'Net Profit (NGN)' : 'Net Profit',
+      canViewProfit ? 'Margin (%)' : 'Margin',
+      'Payment Method',
+      'Customer Name',
+      'Logged By',
+    ];
+
+    const rows = sales.map((s) => [
+      new Date(s.date).toLocaleDateString(),
+      `"${s.productName.replace(/"/g, '""')}"`,
+      s.quantity,
+      s.sellingPrice,
+      s.totalRevenue,
+      canViewCost ? s.costPrice : 'CONFIDENTIAL',
+      canViewProfit ? s.netProfit : 'CONFIDENTIAL',
+      canViewProfit ? `${s.profitMarginPercent}%` : 'CONFIDENTIAL',
+      s.paymentMethod.toUpperCase(),
+      `"${(s.customerName || 'Walk-in').replace(/"/g, '""')}"`,
+      `"${s.loggedBy.replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Chinux_Logbook_Sales_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrintReport = () => {
+    window.print();
+  };
 
   const handleAddSale = (e: React.FormEvent) => {
     e.preventDefault();
@@ -325,8 +386,33 @@ export default function LogbookPage() {
 
       {/* Sales Table */}
       <div className="bg-white dark:bg-navy-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-          <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Recent Logged Sales</h3>
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Recent Logged Sales</h3>
+            <span className="text-[10px] text-slate-400">Total {sales.length} entries recorded in shop ledger</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadCSV}
+              className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm"
+              title="Download formatted Excel/CSV file of your sales"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Download CSV / Excel</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePrintReport}
+              className="px-3 py-1.5 bg-slate-100 dark:bg-navy-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all"
+              title="Print or Save as PDF"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <span>Print / PDF</span>
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">

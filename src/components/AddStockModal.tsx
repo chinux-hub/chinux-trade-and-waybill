@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, X, CheckCircle, Sparkles, Image as ImageIcon, AlertCircle } from 'lucide-react';
@@ -13,7 +13,8 @@ interface AddStockModalProps {
 
 export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModalProps) {
   const [profile] = useState<TraderProfile>(storage.getProfile());
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   // Form fields
   const [name, setName] = useState('');
@@ -44,8 +45,8 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMsg('Image size exceeds 5MB. Please choose a smaller photo.');
+    if (file.size > 8 * 1024 * 1024) {
+      setErrorMsg('Image size exceeds 8MB. Please choose a smaller photo.');
       return;
     }
 
@@ -103,7 +104,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
                 Upload New Stock Arrival
               </h2>
               <span className="text-[10px] text-slate-500">
-                Snap or upload photos of arrived cartons • Logged by <strong className="text-emerald-600">{actor}</strong>
+                Pick from device gallery or snap camera • Logged by <strong className="text-emerald-600">{actor}</strong>
               </span>
             </div>
           </div>
@@ -126,11 +127,22 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
           {/* Photo Upload Area */}
           <div>
             <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Product Photo (Camera or Gallery) *
+              Product Photo (Device Files or Camera)
             </label>
+            
+            {/* Gallery input: allows picking files from device gallery or file system */}
             <input
               type="file"
-              ref={fileInputRef}
+              ref={galleryInputRef}
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+
+            {/* Camera input: triggers camera */}
+            <input
+              type="file"
+              ref={cameraInputRef}
               accept="image/*"
               capture="environment"
               onChange={handleFileChange}
@@ -138,15 +150,22 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
             />
 
             {imageUrl ? (
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 h-44 group">
+              <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 h-48 group">
                 <img src={imageUrl} alt="Uploaded preview" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => galleryInputRef.current?.click()}
                     className="px-3 py-1.5 bg-white text-slate-900 font-bold rounded-xl text-xs shadow-md"
                   >
-                    Change Photo
+                    Choose from Gallery
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="px-3 py-1.5 bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-md"
+                  >
+                    Take Photo
                   </button>
                   <button
                     type="button"
@@ -158,19 +177,36 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
                 </div>
               </div>
             ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="cursor-pointer border-2 border-dashed border-emerald-300 dark:border-emerald-800/80 rounded-2xl p-6 text-center bg-emerald-50/40 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors flex flex-col items-center justify-center gap-2"
-              >
-                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/60 rounded-full text-emerald-600">
-                  <Camera className="w-6 h-6" />
-                </div>
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Option 1: Gallery / Device File Picker */}
+                <div
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="cursor-pointer border-2 border-dashed border-emerald-300 dark:border-emerald-800/80 rounded-2xl p-4 text-center bg-emerald-50/40 dark:bg-emerald-950/20 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors flex flex-col items-center justify-center gap-1.5"
+                >
+                  <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/60 rounded-full text-emerald-600">
+                    <Upload className="w-5 h-5" />
+                  </div>
                   <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
-                    Tap to Snap or Select Product Photo
+                    Choose from Device / Gallery
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    Supports camera capture on phone or gallery image upload (JPEG, PNG, WebP)
+                    Upload from phone or PC storage (JPEG, PNG, WebP)
+                  </span>
+                </div>
+
+                {/* Option 2: Live Camera Snapshot */}
+                <div
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="cursor-pointer border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-4 text-center bg-slate-50/50 dark:bg-navy-950/30 hover:bg-slate-100 dark:hover:bg-navy-900 transition-colors flex flex-col items-center justify-center gap-1.5"
+                >
+                  <div className="p-2.5 bg-slate-100 dark:bg-navy-800 rounded-full text-slate-600 dark:text-slate-300">
+                    <Camera className="w-5 h-5" />
+                  </div>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
+                    Take Photo with Camera
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Snap live picture of arrived carton or shelf
                   </span>
                 </div>
               </div>

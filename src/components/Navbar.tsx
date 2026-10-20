@@ -102,12 +102,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     <>
       <header className="sticky top-0 z-40 w-full border-b backdrop-blur-md bg-white/95 dark:bg-navy-950/90 border-slate-200 dark:border-slate-800 transition-colors">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-3">
-          {/* Clickable Brand Logo & Name (Tapping toggles Encapsulated Drawer on Mobile) */}
+          {/* Clickable Brand Logo & Name */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
             <button
               onClick={() => setIsDrawerOpen(true)}
               className="flex items-center gap-2 group text-left focus:outline-none"
-              title="Click logo to open encapsulated menu & tools"
+              title="Open shop menu & quick controls"
             >
               <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-emerald-500/20 group-hover:scale-105 transition-transform bg-white relative">
                 <img
@@ -118,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     (e.target as HTMLElement).style.display = 'none';
                   }}
                 />
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border border-white dark:border-navy-950 md:hidden"></div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border border-white dark:border-navy-950"></div>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
@@ -130,25 +130,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </span>
                 </div>
                 <span className="text-[9px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline-block">
-                  Anambra & Lagos Wholesale Network
+                  Wholesale Operating System
                 </span>
               </div>
             </button>
-
-            {/* Quick Drawer Pill for Mobile */}
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="md:hidden p-1.5 rounded-lg bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
-              title="Open Encapsulated Menu"
-            >
-              <Menu className="w-4 h-4" />
-            </button>
           </div>
 
-          {/* Desktop Search Bar */}
+          {/* Search Bar (Both Desktop & Tablet) */}
           <button
             onClick={onOpenSearch}
-            className="flex-1 max-w-xs hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-900/60 text-slate-400 dark:text-slate-500 hover:border-emerald-500/50 hover:bg-white dark:hover:bg-navy-900 transition-all text-sm"
+            className="flex-1 max-w-sm hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-900/60 text-slate-400 dark:text-slate-500 hover:border-emerald-500/50 hover:bg-white dark:hover:bg-navy-900 transition-all text-sm"
           >
             <Search className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="flex-1 text-left text-xs">Search Waybill, Customer, Phone...</span>
@@ -157,154 +148,47 @@ export const Navbar: React.FC<NavbarProps> = ({
             </kbd>
           </button>
 
-          {/* Right Actions Bar */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Quick Search on Mobile */}
+          {/* Right Actions Bar: Clean, Focused & Modular */}
+          <div className="flex items-center gap-2">
+            {/* Quick Search Icon for Mobile Screens */}
             <button
               onClick={onOpenSearch}
-              className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-900"
+              className="sm:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-900"
               title="Search"
             >
-              <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Search className="w-4 h-4" />
             </button>
 
-            {/* Subscription Button (Desktop) */}
-            <button
-              onClick={onOpenSubscription}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold transition-all hover:scale-105"
-              title="Pro Membership & Billing"
-            >
-              <Crown className="w-3.5 h-3.5 text-amber-500" />
-              <span>{isSubscribed ? 'Pro Active' : `Trial: ${trialDaysLeft}d`}</span>
-            </button>
-
-            {/* Automated Bank Sync (Desktop) */}
-            <button
-              onClick={onOpenBank}
-              className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                isBankConnected
-                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                  : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-              }`}
-              title="Connect Nigerian Bank Account for Automated Statement Sync"
-            >
-              <Building2 className="w-3.5 h-3.5 text-blue-600" />
-              <span>{isBankConnected ? 'Bank Auto-Sync' : 'Connect Bank'}</span>
-              {isBankConnected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>}
-            </button>
-
-            {/* Data Export (Desktop) */}
-            <button
-              onClick={onOpenExport}
-              className="hidden md:flex p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-navy-900"
-              title="Data Security, Backup & Excel Export"
-            >
-              <Database className="w-4 h-4 text-emerald-600" />
-            </button>
-
-            {/* Oga vs. Apprentice Role Switcher (Desktop) */}
-            {profile && (
-              <div className="hidden md:inline-flex p-0.5 bg-slate-100 dark:bg-navy-900 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold">
-                {isApprentice ? (
-                  <div className="flex items-center gap-1 px-2.5 py-1 text-amber-600 font-bold" title="Working as Nwaboyi under master shop">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    <span>Nwaboyi (Apprentice)</span>
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleRoleToggle('oga')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
-                        profile.activeRole === 'oga'
-                          ? 'bg-emerald-600 text-white shadow-sm font-bold'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                      title="Full access to wholesale cost prices and profit margins"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>Oga</span>
-                    </button>
-                    <button
-                      onClick={() => handleRoleToggle('apprentice')}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
-                        profile.activeRole === 'apprentice'
-                          ? 'bg-amber-600 text-white shadow-sm font-bold'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                      title="Preview what your sales boys see"
-                    >
-                      <ShieldAlert className="w-3.5 h-3.5" />
-                      <span>Preview Nwaboyi View</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Customer Storefront Link (Desktop) */}
-            <Link
-              href="/store"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs font-bold text-purple-700 dark:text-purple-300 hover:bg-purple-100 transition-all"
-              title="Customer Storefront & Buyer Mode"
-            >
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Customer Store</span>
-            </Link>
-
-            {/* User Auth Profile (Desktop) */}
-            <button
-              onClick={onOpenAuth}
-              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 hover:border-emerald-500 transition-all"
-              title="Account Profile & Sign-in"
-            >
-              <User className="w-3.5 h-3.5 text-emerald-600" />
-              <span>{currentUser ? currentUser.name.split(' ')[0] : 'Sign In'}</span>
-            </button>
-
-            {/* Theme Selector (Desktop) */}
-            <div className="hidden md:flex items-center">
-              {theme === 'sunlight' ? (
-                <button
-                  onClick={() => onToggleTheme('dark')}
-                  className="p-1.5 rounded-lg bg-amber-100 text-amber-900 font-bold text-xs border border-amber-300"
-                  title="Market Sunlight Mode"
-                >
-                  ☀️ Sun
-                </button>
-              ) : theme === 'dark' ? (
-                <button
-                  onClick={() => onToggleTheme('light')}
-                  className="p-2 rounded-lg text-slate-300 hover:bg-navy-900"
-                  title="Dark Mode"
-                >
-                  <Moon className="w-4 h-4 text-indigo-400" />
-                </button>
-              ) : (
-                <button
-                  onClick={() => onToggleTheme('sunlight')}
-                  className="p-2 rounded-lg text-slate-600 hover:bg-slate-100"
-                  title="Cream Light Mode"
-                >
-                  <Sun className="w-4 h-4 text-amber-500" />
-                </button>
-              )}
-            </div>
-
-            {/* New Dispatch Action (Visible on both mobile & desktop) */}
+            {/* New Dispatch Primary CTA */}
             <Link
               href="/new"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm shadow-emerald-600/30 transition-all active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all active:scale-95"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">New Dispatch</span>
               <span className="sm:hidden">Dispatch</span>
             </Link>
+
+            {/* Shop Menu Trigger Button (Visible on both desktop & mobile) */}
+            <button
+              onClick={() => setIsDrawerOpen(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-navy-900 hover:bg-slate-200 dark:hover:bg-navy-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all shadow-sm group"
+              title="Open shop control panel & quick actions"
+            >
+              <Menu className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+              <span className="hidden sm:inline">
+                {currentUser ? currentUser.name.split(' ')[0] : 'Shop Menu'}
+              </span>
+              {isSubscribed && (
+                <span className="hidden md:inline-block w-2 h-2 rounded-full bg-amber-500" title="Pro Member" />
+              )}
+            </button>
           </div>
         </div>
       </header>
 
       {/* ========================================== */}
-      {/* ENCAPSULATED MOBILE LOGO DRAWER */}
+      {/* SHOP CONTROL PANEL DRAWER */}
       {/* ========================================== */}
       {isDrawerOpen && (
         <div className="fixed inset-0 z-50 flex bg-black/60 backdrop-blur-sm animate-fadeIn">
@@ -320,7 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <div className="font-extrabold text-sm text-slate-900 dark:text-white">
                       CHIN<span className="text-emerald-600">UX</span>
                     </div>
-                    <span className="text-[10px] text-slate-400">Encapsulated Shop Drawer</span>
+                    <span className="text-[10px] text-slate-400">Shop Control Panel</span>
                   </div>
                 </div>
                 <button

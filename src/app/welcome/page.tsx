@@ -171,9 +171,9 @@ export default function WelcomePage() {
 
       {/* Hero Section */}
       <header className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-14 text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs font-bold uppercase tracking-wider">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 shadow-[0_0_15px_rgba(16,185,129,0.25)] text-xs font-bold uppercase tracking-wider">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Tailored for Anambra & Lagos Wholesale Corridors
+          Tailored for Nigeria&apos;s Wholesale Corridors
         </div>
 
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight max-w-4xl mx-auto">
@@ -189,7 +189,7 @@ export default function WelcomePage() {
           {currentUser ? (
             <Link
               href="/dashboard"
-              className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/30 text-sm flex items-center gap-2 transition-all hover:scale-105"
+              className="px-6 py-3.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/30 text-sm flex items-center gap-2 transition-all hover:scale-105 border border-emerald-400/30"
             >
               <span>Go to {currentUser.businessName || 'Shop'} Dashboard</span>
               <ArrowRight className="w-4 h-4" />
@@ -197,7 +197,7 @@ export default function WelcomePage() {
           ) : (
             <button
               onClick={() => setIsAuthOpen(true)}
-              className="px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/30 text-sm flex items-center gap-2 transition-all hover:scale-105"
+              className="px-6 py-3.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-600/30 text-sm flex items-center gap-2 transition-all hover:scale-105 border border-emerald-400/30"
             >
               <span>Launch Trader Portal (Day-1 Ready)</span>
               <ArrowRight className="w-4 h-4" />
@@ -206,7 +206,7 @@ export default function WelcomePage() {
 
           <Link
             href="/join"
-            className="px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold rounded-2xl text-sm transition-all"
+            className="px-5 py-3.5 bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-600/60 shadow-[0_4px_12px_rgba(255,255,255,0.03)] font-bold rounded-2xl text-sm transition-all"
           >
             Join with Apprentice Code
           </Link>
@@ -219,7 +219,7 @@ export default function WelcomePage() {
           <span>•</span>
           <span>✓ 100% Works Offline</span>
           <span>•</span>
-          <span>✓ Supabase Cloud Backup</span>
+          <span>✓ Secure Cloud Backup</span>
         </div>
       </header>
 
@@ -340,13 +340,13 @@ export default function WelcomePage() {
           </div>
 
           {/* Pillar 6: Mobile PWA & Offline Engine */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-700/80 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold">
               <Smartphone className="w-5 h-5" />
             </div>
             <h3 className="font-extrabold text-base text-white">Install as Mobile App (100% Offline)</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Install Chinux TradeBill as a native app on Android or iPhone. Work completely offline in market conditions with zero network; all your data automatically syncs to Supabase when reconnected.
+              Install Chinux TradeBill as a native app on Android or iPhone. Work completely offline in market conditions with zero network; all your waybills and sales automatically sync once reconnected.
             </p>
           </div>
         </div>

@@ -58,6 +58,14 @@ export default function RootLayout({
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Capture PWA install prompt globally
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      (window as any).deferredPrompt = e;
+      window.dispatchEvent(new Event('chinux_pwa_ready'));
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
@@ -69,6 +77,7 @@ export default function RootLayout({
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
   }, []);
 
@@ -106,7 +115,7 @@ export default function RootLayout({
             <div className="flex items-center gap-2 mx-auto">
               <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
               <span>
-                ⚡ Offline Mode: Working offline. All waybills & sales will auto-sync to Supabase once reconnected.
+                ⚡ Offline Mode: Working offline. All waybills & sales will automatically sync once reconnected.
               </span>
             </div>
             <button

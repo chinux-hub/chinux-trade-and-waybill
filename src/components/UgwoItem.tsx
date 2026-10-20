@@ -118,13 +118,23 @@ export const UgwoItem: React.FC<UgwoItemProps> = ({ waybill, profile, onPaymentS
           </div>
 
           {/* Settle Debt Button */}
-          <button
-            onClick={() => setShowSettleModal(true)}
-            className="px-3.5 py-1.5 bg-slate-100 dark:bg-navy-950 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1 text-[11px]"
-          >
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Record Payment</span>
-          </button>
+          {waybill.ugwoBalance > 0 ? (
+            <button
+              onClick={() => {
+                setSettleAmount(waybill.ugwoBalance > 0 ? waybill.ugwoBalance.toString() : '');
+                setShowSettleModal(true);
+              }}
+              className="px-3.5 py-1.5 bg-slate-100 dark:bg-navy-950 hover:bg-slate-200 text-slate-800 dark:text-slate-200 font-bold rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-1 text-[11px]"
+            >
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Record Payment</span>
+            </button>
+          ) : (
+            <span className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold rounded-xl border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 text-[11px]">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Fully Settled</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -140,42 +150,57 @@ export const UgwoItem: React.FC<UgwoItemProps> = ({ waybill, profile, onPaymentS
               <strong className="text-red-600">{formatNaira(waybill.ugwoBalance)}</strong>
             </p>
 
-            <form onSubmit={handleSettle} className="space-y-3">
-              <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Amount Received (₦)
-                </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  max={waybill.ugwoBalance}
-                  value={settleAmount}
-                  onChange={(e) => setSettleAmount(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-base font-bold"
-                />
-              </div>
-
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300">
-                ✅ Recording payment will update your shop ledger, log an audit record, and open WhatsApp to send a verified receipt to the customer!
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
+            {waybill.ugwoBalance <= 0 ? (
+              <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-2xl text-center space-y-3 border border-emerald-200 dark:border-emerald-800">
+                <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto" />
+                <p className="font-bold">This waybill debt has already been completely settled (₦0 balance).</p>
                 <button
                   type="button"
                   onClick={() => setShowSettleModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm"
-                >
-                  Confirm & Send Receipt
+                  Close
                 </button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSettle} className="space-y-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Amount Received (₦)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={waybill.ugwoBalance}
+                    placeholder="Enter amount received (₦)"
+                    value={settleAmount}
+                    onChange={(e) => setSettleAmount(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-base font-bold"
+                  />
+                </div>
+
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800 text-[11px] text-emerald-800 dark:text-emerald-300">
+                  ✅ Recording payment will update your shop ledger, log an audit record, and open WhatsApp to send a verified receipt to the customer!
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSettleModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-sm"
+                  >
+                    Confirm & Send Receipt
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

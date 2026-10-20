@@ -256,7 +256,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
               <input
                 type="number"
                 required
-                placeholder="e.g. 38000"
+                placeholder="Wholesale price (₦)"
                 value={wholesalePrice}
                 onChange={(e) => setWholesalePrice(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -269,7 +269,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
               </label>
               <input
                 type="number"
-                placeholder="e.g. 45000"
+                placeholder="Retail price (₦)"
                 value={retailPrice}
                 onChange={(e) => setRetailPrice(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -284,7 +284,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
                 type="number"
                 required
                 min="1"
-                placeholder="e.g. 25"
+                placeholder="Cartons in stock"
                 value={stockCount}
                 onChange={(e) => setStockCount(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"

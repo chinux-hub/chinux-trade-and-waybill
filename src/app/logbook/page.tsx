@@ -254,7 +254,7 @@ export default function LogbookPage() {
                 type="number"
                 required
                 min="1"
-                placeholder="e.g. 1"
+                placeholder="Quantity (cartons)"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -284,7 +284,7 @@ export default function LogbookPage() {
               <input
                 type={canViewCost ? 'number' : 'password'}
                 disabled={!canViewCost}
-                placeholder={canViewCost ? 'e.g. 20000' : '••••••'}
+                placeholder={canViewCost ? 'Cost price (₦)' : '••••••'}
                 value={costPrice}
                 onChange={(e) => setCostPrice(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -300,7 +300,7 @@ export default function LogbookPage() {
                 type="number"
                 required
                 disabled={!canEditPrice}
-                placeholder="e.g. 28000"
+                placeholder="Selling price (₦)"
                 value={sellingPrice}
                 onChange={(e) => setSellingPrice(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"

@@ -10,41 +10,66 @@ export const InstallPwaBanner: React.FC = () => {
 
   useEffect(() => {
     // Check if already installed (standalone mode)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+    const isStandalone = typeof window !== 'undefined' && (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    );
     if (isStandalone) return;
+
+    if (typeof window !== 'undefined' && (window as any).deferredPrompt) {
+      setDeferredPrompt((window as any).deferredPrompt);
+      setShowBanner(true);
+    }
 
     const handler = (e: any) => {
       e.preventDefault();
+      (window as any).deferredPrompt = e;
       setDeferredPrompt(e);
       setShowBanner(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    const readyHandler = () => {
+      if ((window as any).deferredPrompt) {
+        setDeferredPrompt((window as any).deferredPrompt);
+        setShowBanner(true);
+      }
+    };
 
-    // Show banner anyway on mobile if not standalone after 3 seconds
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('chinux_pwa_ready', readyHandler);
+
+    // Show banner anyway on mobile if not standalone after 2 seconds
     const timer = setTimeout(() => {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (isMobile && !isStandalone) {
         setShowBanner(true);
       }
-    }, 3000);
+    }, 2000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('chinux_pwa_ready', readyHandler);
       clearTimeout(timer);
     };
   }, []);
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        setShowBanner(false);
+    const promptEvent = deferredPrompt || (typeof window !== 'undefined' && (window as any).deferredPrompt);
+    if (promptEvent) {
+      try {
+        promptEvent.prompt();
+        const { outcome } = await promptEvent.userChoice;
+        if (outcome === 'accepted') {
+          setShowBanner(false);
+        }
+        setDeferredPrompt(null);
+        if (typeof window !== 'undefined') (window as any).deferredPrompt = null;
+      } catch (err) {
+        console.warn('Install error, showing manual instructions:', err);
+        setShowInstructions(true);
       }
-      setDeferredPrompt(null);
     } else {
-      // Fallback instructions for iOS Safari or Chrome
+      // Fallback instructions for iOS Safari or browsers without promptEvent
       setShowInstructions(true);
     }
   };

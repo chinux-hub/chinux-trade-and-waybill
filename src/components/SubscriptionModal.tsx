@@ -16,20 +16,20 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   onClose,
   reason,
 }) => {
-  const policy = storage.getPolicy();
-  const profile = storage.getProfile();
-  const trialDaysLeft = storage.getTrialDaysRemaining();
-  const isSubscribed = storage.isUserSubscribed();
   const [selectedTier, setSelectedTier] = useState<'monthly' | 'yearly'>('monthly');
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [payError, setPayError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
+  const policy = storage.getPolicy() || {};
+  const profile = storage.getProfile() || {};
+  const trialDaysLeft = storage.getTrialDaysRemaining() || 0;
+  const isSubscribed = storage.isUserSubscribed();
   const monthlyPrice = policy.proPlanMonthlyPrice || 3500;
   const yearlyPrice = policy.proPlanYearlyPrice || 35000;
   const currentUser = storage.getCurrentUser();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [payError, setPayError] = useState<string | null>(null);
 
   const handleSubscribe = () => {
     setPayError(null);

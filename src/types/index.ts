@@ -11,6 +11,7 @@ export type MarketHub =
 export interface User {
   id: string;
   name: string;
+  username?: string; // unique username to distinguish users even with same email
   email: string;
   avatar?: string;
   marketHub: MarketHub;
@@ -198,6 +199,7 @@ export interface PlatformRegistrationLog {
   id: string;
   timestamp: string;
   userName: string;
+  username?: string; // unique username handle
   email: string;
   businessName: string;
   marketHub: MarketHub;

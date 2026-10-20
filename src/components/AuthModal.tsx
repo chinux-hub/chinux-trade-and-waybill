@@ -16,6 +16,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   // Form states
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -53,7 +54,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setErrorMsg('');
 
     if (mode === 'login') {
-      const res = await storage.loginWithEmail(email, password);
+      const res = await storage.loginWithEmail(email, password, username);
       setIsLoading(false);
       if (res.error) {
         setErrorMsg(res.error);
@@ -69,7 +70,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         }, 900);
       }
     } else {
-      const res = await storage.signup(name || 'Trader', email, password, businessName || 'Wholesale Enterprise', marketHub);
+      const res = await storage.signup(name || 'Trader', email, password, businessName || 'Wholesale Enterprise', marketHub, username);
       setIsLoading(false);
       if (res.error) {
         setErrorMsg(res.error);
@@ -167,9 +168,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between hover:border-emerald-500/50 transition-all"
                       >
                         <div>
-                          <span className="font-bold text-slate-800 dark:text-slate-200 block text-[11px]">
-                            {acc.name}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-slate-800 dark:text-slate-200 block text-[11px]">
+                              {acc.name}
+                            </span>
+                            {acc.username && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
+                                @{acc.username}
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[10px] text-slate-400">{acc.businessName || acc.email}</span>
                         </div>
                         <button
@@ -233,6 +241,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </div>
 
                   <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Unique Username (@handle)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2 text-slate-400 font-bold">@</span>
+                      <input
+                        type="text"
+                        placeholder="emeka_parts / brother_sani"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                        className="w-full pl-7 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Differentiates your login even if multiple partners or apprentices share the same email address.
+                    </p>
+                  </div>
+
+                  <div>
                     <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Shop / Business Name</label>
                     <input
                       type="text"
@@ -263,11 +290,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               )}
 
               <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {mode === 'login' ? 'Email Address or @Username' : 'Email Address'}
+                </label>
                 <input
-                  type="email"
+                  type={mode === 'login' ? 'text' : 'email'}
                   required
-                  placeholder="trader@gmail.com"
+                  placeholder={mode === 'login' ? 'trader@gmail.com or @emeka_parts' : 'trader@gmail.com'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"

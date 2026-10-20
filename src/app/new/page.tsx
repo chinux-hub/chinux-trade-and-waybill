@@ -242,7 +242,7 @@ export default function NewWaybillPage() {
                   type="number"
                   required
                   min="1"
-                  placeholder="e.g. 5"
+                  placeholder="Enter carton count"
                   value={cartonCount}
                   onChange={(e) => setCartonCount(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -258,7 +258,7 @@ export default function NewWaybillPage() {
                 <input
                   type="number"
                   required
-                  placeholder="e.g. 150000"
+                  placeholder="Enter total amount (₦)"
                   value={totalValue}
                   onChange={(e) => setTotalValue(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-sm"
@@ -271,7 +271,7 @@ export default function NewWaybillPage() {
                 </label>
                 <input
                   type="number"
-                  placeholder="e.g. 50000"
+                  placeholder="Enter deposit paid (₦)"
                   value={depositPaid}
                   onChange={(e) => setDepositPaid(e.target.value)}
                   className="w-full px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-sm"

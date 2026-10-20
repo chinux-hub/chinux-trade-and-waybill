@@ -104,15 +104,49 @@ class StorageManager {
     }
   }
 
+  private removeItem(key: string): void {
+    if (!this.isBrowser()) return;
+    try {
+      localStorage.removeItem(`chinux_${key}`);
+      this.emitUpdate();
+    } catch (e) {
+      console.error('Storage remove error:', e);
+    }
+  }
+
   // ==========================================
   // USER AUTHENTICATION & MULTI-ACCOUNT SWITCHING
   // ==========================================
+  isAccountDeleted(identifier?: string): boolean {
+    if (!identifier) return false;
+    const clean = identifier.trim().toLowerCase();
+    const list = this.getPlatformRegistrationLogs();
+    const found = list.find(
+      (r) =>
+        r.email?.toLowerCase() === clean ||
+        r.username?.toLowerCase() === clean ||
+        r.id === clean
+    );
+    return found?.status === 'deleted';
+  }
+
   getCurrentUser(): User | null {
     const user = this.getItem<User | null>('current_user', null);
-    if (user) return user;
+    if (user) {
+      if (this.isAccountDeleted(user.email) || (user.username && this.isAccountDeleted(user.username))) {
+        this.removeItem('current_user');
+        this.removeItem('last_signed_in_user');
+        return null;
+      }
+      return user;
+    }
     // When offline, automatically restore and show the last account signed into
     const lastUser = this.getItem<User | null>('last_signed_in_user', null);
     if (lastUser) {
+      if (this.isAccountDeleted(lastUser.email) || (lastUser.username && this.isAccountDeleted(lastUser.username))) {
+        this.removeItem('last_signed_in_user');
+        return null;
+      }
       return lastUser;
     }
     return null;
@@ -138,7 +172,12 @@ class StorageManager {
 
   saveAccount(user: User): void {
     const all = this.getItem<User[]>('saved_accounts', []);
-    const filtered = all.filter((a) => a.id !== user.id && a.email !== user.email);
+    const filtered = all.filter((a) => {
+      if (a.id === user.id) return false;
+      if (user.username && a.username && a.username.toLowerCase() === user.username.toLowerCase()) return false;
+      if (!user.username && !a.username && a.email.toLowerCase() === user.email.toLowerCase()) return false;
+      return true;
+    });
     this.setItem('saved_accounts', [user, ...filtered]);
     this.setItem('last_signed_in_user', user);
   }
@@ -181,6 +220,10 @@ class StorageManager {
   }
 
   async loginWithGoogle(email: string = 'trader@gmail.com', name: string = 'Google Trader'): Promise<{ user?: User; error?: string }> {
+    if (this.isAccountDeleted(email)) {
+      return { error: 'This trader account has been deactivated or suspended by platform super-admin. Please contact support.' };
+    }
+
     if (supabase) {
       try {
         const { error } = await supabase.auth.signInWithOAuth({
@@ -198,9 +241,11 @@ class StorageManager {
       }
     }
 
+    const cleanUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
     const user: User = {
       id: 'usr-' + Date.now(),
       name,
+      username: cleanUsername,
       email,
       marketHub: 'onitsha',
       businessName: name + ' Enterprises',
@@ -209,6 +254,15 @@ class StorageManager {
     };
     this.setItem('current_user', user);
     this.saveAccount(user);
+
+    // Ensure Oga sovereignty
+    const profile = this.getProfile();
+    profile.activeRole = 'oga';
+    profile.isApprenticeAccount = false;
+    profile.masterShopId = undefined;
+    profile.masterShopName = undefined;
+    this.saveProfile(profile);
+
     this.addAuditLog({
       id: 'audit-' + Date.now(),
       timestamp: new Date().toISOString(),
@@ -221,11 +275,32 @@ class StorageManager {
     return { user };
   }
 
-  async loginWithEmail(email: string, password?: string): Promise<{ user?: User; error?: string }> {
+  async loginWithEmail(identifier: string, password?: string, usernamePrompt?: string): Promise<{ user?: User; error?: string }> {
+    if (this.isAccountDeleted(identifier) || (usernamePrompt && this.isAccountDeleted(usernamePrompt))) {
+      return { error: 'This trader account has been deactivated or suspended by platform super-admin. Please contact support.' };
+    }
+
+    const cleanId = identifier.trim().toLowerCase();
+    const cleanUsername = usernamePrompt ? usernamePrompt.trim().toLowerCase().replace(/^@/, '') : '';
+
+    // Check saved accounts to find an existing user matching username or email
+    const saved = this.getItem<User[]>('saved_accounts', []);
+    const matchedSaved = saved.find((acc) => {
+      if (cleanUsername && acc.username?.toLowerCase() === cleanUsername) return true;
+      if (acc.username?.toLowerCase() === cleanId) return true;
+      if (acc.email.toLowerCase() === cleanId) {
+        if (cleanUsername && acc.username) {
+          return acc.username.toLowerCase() === cleanUsername;
+        }
+        return true;
+      }
+      return false;
+    });
+
     if (supabase && password) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: matchedSaved?.email || identifier,
           password,
         });
 
@@ -236,22 +311,29 @@ class StorageManager {
         if (data.user) {
           const user: User = {
             id: data.user.id,
-            name: data.user.user_metadata?.name || email.split('@')[0],
-            email: data.user.email || email,
-            marketHub: (data.user.user_metadata?.marketHub as MarketHub) || 'trade_fair_lagos',
-            businessName: data.user.user_metadata?.businessName || 'Wholesale Hub',
+            name: data.user.user_metadata?.name || matchedSaved?.name || identifier.split('@')[0],
+            username: data.user.user_metadata?.username || cleanUsername || matchedSaved?.username,
+            email: data.user.email || identifier,
+            marketHub: (data.user.user_metadata?.marketHub as MarketHub) || matchedSaved?.marketHub || 'trade_fair_lagos',
+            businessName: data.user.user_metadata?.businessName || matchedSaved?.businessName || 'Wholesale Hub',
             authProvider: 'email',
             createdAt: data.user.created_at,
           };
           this.setItem('current_user', user);
           this.saveAccount(user);
 
-          // Restore Oga role if not an apprentice account
+          // Restore Oga role and reset any lingering apprentice flags
           const profile = this.getProfile();
-          if (!profile.isApprenticeAccount) {
-            profile.activeRole = 'oga';
-            this.saveProfile(profile);
+          profile.activeRole = 'oga';
+          profile.isApprenticeAccount = false;
+          profile.masterShopId = undefined;
+          profile.masterShopName = undefined;
+          if (user.businessName) profile.businessName = user.businessName;
+          if (user.marketHub) {
+            profile.marketHub = user.marketHub;
+            profile.marketLocation = this.getMarketHubLabel(user.marketHub);
           }
+          this.saveProfile(profile);
 
           this.emitUpdate();
           return { user };
@@ -262,10 +344,11 @@ class StorageManager {
     }
 
     // Offline / Demo fallback
-    const user: User = {
+    const user: User = matchedSaved || {
       id: 'usr-' + Date.now(),
-      name: email.split('@')[0],
-      email,
+      name: identifier.split('@')[0],
+      username: cleanUsername || (identifier.includes('@') ? identifier.split('@')[0] : identifier),
+      email: identifier.includes('@') ? identifier : `${identifier}@chinux.ng`,
       marketHub: 'trade_fair_lagos',
       businessName: 'Lagos Wholesale Hub',
       authProvider: 'email',
@@ -274,18 +357,26 @@ class StorageManager {
     this.setItem('current_user', user);
     this.saveAccount(user);
 
-    // Restore Oga role if not an apprentice account
+    // Restore Oga role and reset any lingering apprentice flags
     const profile = this.getProfile();
-    if (!profile.isApprenticeAccount) {
-      profile.activeRole = 'oga';
-      this.saveProfile(profile);
+    profile.activeRole = 'oga';
+    profile.isApprenticeAccount = false;
+    profile.masterShopId = undefined;
+    profile.masterShopName = undefined;
+    if (user.businessName) profile.businessName = user.businessName;
+    if (user.marketHub) {
+      profile.marketHub = user.marketHub;
+      profile.marketLocation = this.getMarketHubLabel(user.marketHub);
     }
+    this.saveProfile(profile);
 
     this.emitUpdate();
     return { user };
   }
 
-  async signup(name: string, email: string, password?: string, businessName: string = '', marketHub: MarketHub = 'onitsha'): Promise<{ user?: User; error?: string }> {
+  async signup(name: string, email: string, password?: string, businessName: string = '', marketHub: MarketHub = 'onitsha', username?: string): Promise<{ user?: User; error?: string }> {
+    const cleanUsername = (username ? username.trim().toLowerCase().replace(/[^a-z0-9_]/g, '') : '') || email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '');
+
     if (supabase && password) {
       try {
         const { data, error } = await supabase.auth.signUp({
@@ -294,6 +385,7 @@ class StorageManager {
           options: {
             data: {
               name,
+              username: cleanUsername,
               businessName,
               marketHub,
             },
@@ -311,6 +403,7 @@ class StorageManager {
               id: data.user.id,
               business_name: businessName,
               owner_name: name,
+              username: cleanUsername,
               market_hub: marketHub,
               market_location: this.getMarketHubLabel(marketHub),
               active_role: 'oga',
@@ -323,6 +416,7 @@ class StorageManager {
           const user: User = {
             id: data.user.id,
             name,
+            username: cleanUsername,
             email,
             marketHub,
             businessName,
@@ -354,6 +448,7 @@ class StorageManager {
             id: 'reg-' + Date.now(),
             timestamp: new Date().toISOString(),
             userName: name,
+            username: cleanUsername,
             email,
             businessName,
             marketHub,
@@ -374,6 +469,7 @@ class StorageManager {
     const user: User = {
       id: 'usr-' + Date.now(),
       name,
+      username: cleanUsername,
       email,
       marketHub,
       businessName,
@@ -405,6 +501,7 @@ class StorageManager {
       id: 'reg-' + Date.now(),
       timestamp: new Date().toISOString(),
       userName: name,
+      username: cleanUsername,
       email,
       businessName,
       marketHub,
@@ -428,6 +525,15 @@ class StorageManager {
     if (!this.isBrowser()) return;
     localStorage.removeItem('chinux_current_user');
     localStorage.removeItem('chinux_last_signed_in_user');
+
+    // Cleanly detach apprentice mode so another account does not inherit it
+    const profile = this.getProfile();
+    profile.activeRole = 'oga';
+    profile.isApprenticeAccount = false;
+    profile.masterShopId = undefined;
+    profile.masterShopName = undefined;
+    this.saveProfile(profile);
+
     this.emitUpdate();
   }
 
@@ -585,6 +691,7 @@ class StorageManager {
 
   deletePlatformAccount(id: string): void {
     const list = this.getPlatformRegistrationLogs();
+    const target = list.find((r) => r.id === id);
     const updated = list.map((item) => {
       if (item.id === id) {
         return {
@@ -598,10 +705,27 @@ class StorageManager {
     this.setItem('platform_registrations', updated);
 
     // Also remove from saved accounts if matching
-    const target = list.find((r) => r.id === id);
-    if (target?.email) {
+    if (target?.email || target?.username) {
       const allAccounts = this.getItem<User[]>('saved_accounts', []);
-      this.setItem('saved_accounts', allAccounts.filter((a) => a.email !== target.email));
+      this.setItem(
+        'saved_accounts',
+        allAccounts.filter(
+          (a) =>
+            a.id !== id &&
+            (target.email ? a.email.toLowerCase() !== target.email.toLowerCase() : true) &&
+            (target.username && a.username ? a.username.toLowerCase() !== target.username.toLowerCase() : true)
+        )
+      );
+
+      const currentUser = this.getItem<User | null>('current_user', null);
+      if (
+        currentUser &&
+        (currentUser.id === id ||
+          currentUser.email.toLowerCase() === target.email?.toLowerCase() ||
+          (currentUser.username && target.username && currentUser.username.toLowerCase() === target.username.toLowerCase()))
+      ) {
+        this.logout();
+      }
     }
 
     const policy = this.getPolicy();

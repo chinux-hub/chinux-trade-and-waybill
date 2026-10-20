@@ -22,6 +22,7 @@ import {
 import { storage } from '@/lib/storage';
 import { CatalogProduct, TraderProfile, Waybill } from '@/types';
 import { formatNaira } from '@/lib/formatters';
+import { createWhatsAppLink } from '@/lib/whatsapp';
 
 function CustomerStorefrontContent() {
   const searchParams = useSearchParams();
@@ -65,11 +66,9 @@ function CustomerStorefrontContent() {
 
   const handleOrderViaWhatsApp = (prod: CatalogProduct) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';
-    const message = `Hello *${profile.businessName || 'Wholesale Store'}*,\nI am viewing your wholesale catalog on Chinux (${origin}/store?product=${prod.id}).\n\n📦 *I want to order:*\n- *Item:* ${prod.name}\n- *Category:* ${prod.category}\n- *Wholesale Price:* ${formatNaira(prod.wholesalePrice)} / carton\n- *Stock Available:* ${prod.stockCount} cartons\n\nPlease confirm carton availability, payment account, and waybill dispatch schedule to my city.`;
+    const message = `Hello *${profile?.businessName || 'Wholesale Store'}*,\nI am viewing your wholesale catalog on Chinux (${origin}/store?product=${prod.id}).\n\n📦 *I want to order:*\n- *Item:* ${prod.name}\n- *Category:* ${prod.category}\n- *Wholesale Price:* ${formatNaira(prod.wholesalePrice)} / carton\n- *Stock Available:* ${prod.stockCount} cartons\n\nPlease confirm carton availability, payment account, and waybill dispatch schedule to my city.`;
 
-    let cleanPhone = (profile.phone || '').replace(/\D/g, '');
-    if (cleanPhone.startsWith('0')) cleanPhone = '234' + cleanPhone.slice(1);
-    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+    const url = createWhatsAppLink(profile?.phone || '', message);
     window.open(url, '_blank');
   };
 
@@ -215,7 +214,7 @@ function CustomerStorefrontContent() {
               </a>
             )}
             <a
-              href={`https://api.whatsapp.com/send?phone=${(profile.phone || '').replace(/\D/g, '')}`}
+              href={createWhatsAppLink(profile?.phone || '', `Hello *${profile?.businessName || 'Store'}*, I am visiting your Chinux online catalog and would like to make an inquiry.`)}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95"

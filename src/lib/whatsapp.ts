@@ -3,11 +3,14 @@ import { formatNaira, formatDate } from './formatters';
 
 export function createWhatsAppLink(phoneNumber: string, message: string): string {
   // Clean phone number: remove spaces, dashes, leading zero, ensure 234 prefix
-  let cleanPhone = phoneNumber.replace(/\D/g, '');
+  let cleanPhone = (phoneNumber || '').replace(/\D/g, '');
   if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
     cleanPhone = '234' + cleanPhone.slice(1);
   } else if (!cleanPhone.startsWith('234') && cleanPhone.length === 10) {
     cleanPhone = '234' + cleanPhone;
+  }
+  if (!cleanPhone) {
+    return `https://wa.me/?text=${encodeURIComponent(message)}`;
   }
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }

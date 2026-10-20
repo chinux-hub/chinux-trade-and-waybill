@@ -575,11 +575,18 @@ export default function SuperAdminPage() {
                       }`}
                     >
                       <td className="py-3 px-4 font-bold text-white">
-                        <div className="flex items-center gap-2">
-                          <span>{log.userName || 'Unnamed Trader'}</span>
-                          {isDeleted && (
-                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
-                              Suspended
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span>{log.userName || 'Unnamed Trader'}</span>
+                            {isDeleted && (
+                              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                Suspended
+                              </span>
+                            )}
+                          </div>
+                          {log.username && (
+                            <span className="text-[10px] font-mono text-emerald-400/90 font-semibold">
+                              @{log.username}
                             </span>
                           )}
                         </div>

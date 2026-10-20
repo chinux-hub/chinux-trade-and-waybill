@@ -71,6 +71,25 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
         setSelectedProductIds(inStock.length > 0 ? inStock.map((p) => p.id) : allProds.map((p) => p.id));
         setActiveSlideIndex(0);
       }
+
+      // Auto-migrate any base64 images to public cloud storage for WhatsApp previews
+      allProds.forEach((prod) => {
+        if (prod.imageUrl && prod.imageUrl.startsWith('data:')) {
+          fetch('/api/upload-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64: prod.imageUrl, filename: prod.id }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data?.publicUrl) {
+                storage.updateCatalogProduct({ ...prod, imageUrl: data.publicUrl });
+                setCatalog(storage.getCatalog());
+              }
+            })
+            .catch((err) => console.log('Auto-migration failed for prod:', prod.id, err));
+        }
+      });
     }
   }, [isOpen, product]);
 

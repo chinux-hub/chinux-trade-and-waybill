@@ -55,6 +55,18 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
       if (typeof event.target?.result === 'string') {
         setImageUrl(event.target.result);
         setErrorMsg('');
+
+        // Upload to public Supabase Storage for WhatsApp & Storefront sharing
+        const formData = new FormData();
+        formData.append('file', file);
+        fetch('/api/upload-image', { method: 'POST', body: formData })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.publicUrl) {
+              setImageUrl(data.publicUrl);
+            }
+          })
+          .catch((err) => console.log('Cloud image upload fallback:', err));
       }
     };
     reader.readAsDataURL(file);

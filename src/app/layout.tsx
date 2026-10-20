@@ -34,12 +34,12 @@ export default function RootLayout({
   const pathname = usePathname();
 
   const isAdminPage = pathname?.startsWith('/admin');
+  const isStorePage = pathname === '/store' || pathname?.startsWith('/store');
   const isPublicLanding =
     pathname === '/' ||
     pathname === '/welcome' ||
     pathname === '/join' ||
-    pathname === '/store' ||
-    pathname?.startsWith('/store') ||
+    isStorePage ||
     pathname?.startsWith('/waybill/');
 
   const [isOffline, setIsOffline] = useState(false);
@@ -104,7 +104,7 @@ export default function RootLayout({
         <meta name="theme-color" content={isAdminPage ? '#881337' : '#059669'} />
         <link rel="icon" href="/chinux-logo.png" />
       </head>
-      <body className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${isAdminPage ? 'bg-slate-950 text-slate-100' : isPublicLanding ? 'bg-slate-950' : 'pb-16 md:pb-8'}`}>
+      <body className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${isAdminPage ? 'bg-slate-950 text-slate-100' : isStorePage ? 'bg-slate-50 dark:bg-slate-950' : isPublicLanding ? 'bg-slate-950' : 'pb-16 md:pb-8'}`}>
         
         {/* App Update Available Floating Banner */}
         <UpdatePromptBanner />

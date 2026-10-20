@@ -48,6 +48,8 @@ export interface BankTransaction {
 
 export type MessagingMode = 'auto' | 'manual';
 export type MessagingChannel = 'both' | 'whatsapp' | 'sms';
+export type StorefrontTheme = 'dark' | 'light' | 'emerald_luxury';
+export type StorefrontViewMode = 'grid' | 'list' | 'card';
 
 export interface AutoMessagingSettings {
   mode: MessagingMode; // default: 'auto'
@@ -55,6 +57,8 @@ export interface AutoMessagingSettings {
   autoStatusUpdates: boolean; // default: true
   autoWaybillDispatch: boolean; // default: true
   autoUgwoReminders: boolean; // default: true
+  dailyStatusReminder?: boolean; // default: true (morning reminder to post stock on status)
+  dailyStatusReminderTime?: string; // e.g. "08:30"
   smsSenderName?: string;
 }
 
@@ -84,6 +88,7 @@ export interface TraderProfile {
   masterShopId?: string;
   joinedApprentices?: { id: string; name: string; joinedAt: string; email: string }[];
   messagingSettings?: AutoMessagingSettings;
+  storefrontTheme?: StorefrontTheme;
 }
 
 export interface OgaPermissions {

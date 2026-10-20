@@ -19,22 +19,30 @@ import {
   Settings,
   Shield,
   CheckCircle2,
+  Share2,
+  X,
+  Smartphone,
+  ArrowRight,
 } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { Waybill, TraderProfile, SalesLog } from '@/types';
 import { formatNaira } from '@/lib/formatters';
 import { WaybillCard } from '@/components/WaybillCard';
 import { UgwoItem } from '@/components/UgwoItem';
+import { StockBroadcastModal } from '@/components/StockBroadcastModal';
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<TraderProfile>(storage.getProfile());
   const [waybills, setWaybills] = useState<Waybill[]>([]);
   const [sales, setSales] = useState<SalesLog[]>([]);
+  const [isBroadcastModalOpen, setIsBroadcastModalOpen] = useState(false);
+  const [isReminderDismissed, setIsReminderDismissed] = useState(false);
 
   const refreshData = () => {
     setProfile(storage.getProfile());
     setWaybills(storage.getWaybills());
     setSales(storage.getSalesLogs());
+    setIsReminderDismissed(storage.isStatusReminderDismissedToday());
   };
 
   useEffect(() => {
@@ -137,6 +145,52 @@ export default function DashboardPage() {
         {/* Ambient background decoration */}
         <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* 🌅 DAILY WHATSAPP STATUS BROADCAST REMINDER (Togglable in Settings) */}
+      {profile.messagingSettings?.dailyStatusReminder !== false && !isReminderDismissed && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-purple-900/90 via-indigo-950 to-slate-900 border border-purple-500/50 shadow-xl text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-400/30 shrink-0 mt-0.5">
+              <Smartphone className="w-5 h-5 text-purple-300" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider text-purple-300">
+                  🌅 Morning WhatsApp Status Reminder
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                  Recommended Daily
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
+                Good morning Chief! Keep your retail & interstate buyers active. Select today&apos;s available stock and upload price flyers to your WhatsApp Status before your competitors take their orders.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setIsBroadcastModalOpen(true)}
+              className="flex-1 sm:flex-initial px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Select & Post to Status</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                storage.dismissStatusReminderForToday();
+                setIsReminderDismissed(true);
+              }}
+              className="px-3 py-2.5 bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition-all"
+              title="Dismiss reminder until tomorrow"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Financial Metric Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -367,6 +421,12 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Stock Broadcast & Status Modal */}
+      <StockBroadcastModal
+        isOpen={isBroadcastModalOpen}
+        onClose={() => setIsBroadcastModalOpen(false)}
+      />
     </div>
   );
 }

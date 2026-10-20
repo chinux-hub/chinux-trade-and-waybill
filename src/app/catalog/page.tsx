@@ -16,6 +16,7 @@ export default function CatalogPage() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedProductForAlarm, setSelectedProductForAlarm] = useState<CatalogProduct | null>(null);
   const [selectedProductForBroadcast, setSelectedProductForBroadcast] = useState<CatalogProduct | null>(null);
+  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
@@ -120,14 +121,13 @@ export default function CatalogPage() {
             <button
               type="button"
               onClick={() => {
-                if (products.length > 0) {
-                  setSelectedProductForBroadcast(products[0]);
-                }
+                setSelectedProductForBroadcast(null);
+                setIsBroadcastOpen(true);
               }}
               className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md shadow-purple-600/30 transition-all flex items-center gap-2"
             >
               <Share2 className="w-4 h-4" />
-              <span>Broadcast Arrival</span>
+              <span>Broadcast Stock to Status</span>
             </button>
           </div>
         </div>
@@ -207,7 +207,10 @@ export default function CatalogPage() {
                 <div className="flex flex-col gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setSelectedProductForBroadcast(prod)}
+                    onClick={() => {
+                      setSelectedProductForBroadcast(prod);
+                      setIsBroadcastOpen(true);
+                    }}
                     className="w-full py-1.5 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800/80 text-purple-700 dark:text-purple-300 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all"
                   >
                     <Share2 className="w-3.5 h-3.5" />
@@ -253,8 +256,11 @@ export default function CatalogPage() {
       {/* WhatsApp Stock Broadcast Modal */}
       <StockBroadcastModal
         product={selectedProductForBroadcast}
-        isOpen={!!selectedProductForBroadcast}
-        onClose={() => setSelectedProductForBroadcast(null)}
+        isOpen={isBroadcastOpen}
+        onClose={() => {
+          setIsBroadcastOpen(false);
+          setSelectedProductForBroadcast(null);
+        }}
       />
 
       {/* Snap / Upload New Stock Modal */}
@@ -265,6 +271,7 @@ export default function CatalogPage() {
           setProducts(storage.getCatalog());
           if (triggerBroadcast) {
             setSelectedProductForBroadcast(newProd);
+            setIsBroadcastOpen(true);
           }
         }}
       />

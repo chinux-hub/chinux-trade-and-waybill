@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Settings, ShieldCheck, ShieldAlert, Building2, CreditCard, Save, ArrowLeft, CheckCircle2, UserPlus, Share2, Copy, Smartphone, Sparkles, MessageSquare, Send, Bell } from 'lucide-react';
+import { Settings, ShieldCheck, ShieldAlert, Building2, CreditCard, Save, ArrowLeft, CheckCircle2, UserPlus, Share2, Copy, Smartphone, Sparkles, MessageSquare, Send, Bell, Palette, ShoppingBag, Sun, Moon } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { TraderProfile, OgaPermissions, AutoMessagingSettings } from '@/types';
 
@@ -35,6 +35,8 @@ export default function SettingsPage() {
     autoStatusUpdates: true,
     autoWaybillDispatch: true,
     autoUgwoReminders: true,
+    dailyStatusReminder: true,
+    dailyStatusReminderTime: '08:30',
   };
 
   const handleUpdateMessaging = <K extends keyof AutoMessagingSettings>(key: K, value: AutoMessagingSettings[K]) => {
@@ -47,6 +49,8 @@ export default function SettingsPage() {
           autoStatusUpdates: true,
           autoWaybillDispatch: true,
           autoUgwoReminders: true,
+          dailyStatusReminder: true,
+          dailyStatusReminderTime: '08:30',
         }),
         [key]: value,
       },
@@ -537,6 +541,123 @@ export default function SettingsPage() {
                 className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
               />
             </div>
+
+            {/* Daily WhatsApp Status Reminder (Morning reminder to advertise on status) */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-850/40">
+              <div className="pr-4">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs flex items-center gap-1.5">
+                  <span>🌅 Daily WhatsApp Status Morning Reminder</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 font-black uppercase">
+                    Default ON
+                  </span>
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Reminds you every morning on the dashboard to select your available stock and upload price flyers to WhatsApp Status. You can toggle this off anytime.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={messagingSettings.dailyStatusReminder ?? true}
+                onChange={(e) => handleUpdateMessaging('dailyStatusReminder', e.target.checked)}
+                className="w-4 h-4 accent-purple-600 rounded cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 🎨 Customer Storefront Appearance & Theme Settings */}
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
+              <Palette className="w-5 h-5 text-indigo-500" />
+              <span>Customer Storefront Theme & View</span>
+            </div>
+            <Link
+              href="/store"
+              target="_blank"
+              className="text-[11px] font-bold text-emerald-600 hover:text-emerald-500 flex items-center gap-1"
+            >
+              <span>Preview Storefront</span>
+              <Share2 className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+            Choose the default visual theme for buyers visiting your online catalog via WhatsApp broadcast flyers or direct link.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Dark Theme */}
+            <button
+              type="button"
+              onClick={() => setProfile({ ...profile, storefrontTheme: 'dark' })}
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
+                (profile.storefrontTheme || 'dark') === 'dark'
+                  ? 'border-emerald-500 bg-slate-950 text-white shadow-md ring-2 ring-emerald-500/30'
+                  : 'border-slate-200 dark:border-slate-800 bg-slate-900 text-slate-300 opacity-70 hover:opacity-100'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-xs flex items-center gap-1.5">
+                  <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Onyx Dark (Default)</span>
+                </span>
+                {(profile.storefrontTheme || 'dark') === 'dark' && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                )}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Deep midnight black with emerald buttons. Sleek and easy on mobile battery.
+              </p>
+            </button>
+
+            {/* Premium Wholesale Ivory Light Theme */}
+            <button
+              type="button"
+              onClick={() => setProfile({ ...profile, storefrontTheme: 'light' })}
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
+                profile.storefrontTheme === 'light'
+                  ? 'border-emerald-600 bg-white text-slate-900 shadow-md ring-2 ring-emerald-500/30'
+                  : 'border-slate-200 dark:border-slate-800 bg-slate-100 text-slate-700 opacity-70 hover:opacity-100'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-xs flex items-center gap-1.5 text-slate-900">
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Wholesale Ivory Light</span>
+                </span>
+                {profile.storefrontTheme === 'light' && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                )}
+              </div>
+              <p className="text-[10px] text-slate-500 mt-1">
+                Warm ivory background, crisp card surfaces, and bold readable contrast.
+              </p>
+            </button>
+
+            {/* Emerald Luxury Night */}
+            <button
+              type="button"
+              onClick={() => setProfile({ ...profile, storefrontTheme: 'emerald_luxury' })}
+              className={`p-3.5 rounded-2xl border text-left transition-all ${
+                profile.storefrontTheme === 'emerald_luxury'
+                  ? 'border-emerald-400 bg-emerald-950 text-white shadow-md ring-2 ring-emerald-500/30'
+                  : 'border-emerald-900/60 bg-emerald-950/40 text-emerald-200 opacity-70 hover:opacity-100'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-extrabold text-xs flex items-center gap-1.5 text-emerald-200">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Emerald Corridor</span>
+                </span>
+                {profile.storefrontTheme === 'emerald_luxury' && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                )}
+              </div>
+              <p className="text-[10px] text-emerald-300/70 mt-1">
+                Deep forest green and gold styling tailored for Onitsha & Lagos importers.
+              </p>
+            </button>
           </div>
         </div>
 

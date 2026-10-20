@@ -49,7 +49,10 @@ const DEFAULT_PROFILE: TraderProfile = {
     autoStatusUpdates: true,
     autoWaybillDispatch: true,
     autoUgwoReminders: true,
+    dailyStatusReminder: true,
+    dailyStatusReminderTime: '08:30',
   },
+  storefrontTheme: 'dark',
 };
 
 const DEFAULT_POLICY: PlatformPolicy = {
@@ -575,9 +578,35 @@ class StorageManager {
         autoStatusUpdates: true,
         autoWaybillDispatch: true,
         autoUgwoReminders: true,
+        dailyStatusReminder: true,
+        dailyStatusReminderTime: '08:30',
       };
+    } else {
+      if (prof.messagingSettings.dailyStatusReminder === undefined) {
+        prof.messagingSettings.dailyStatusReminder = true;
+      }
+      if (!prof.messagingSettings.dailyStatusReminderTime) {
+        prof.messagingSettings.dailyStatusReminderTime = '08:30';
+      }
+    }
+    if (!prof.storefrontTheme) {
+      prof.storefrontTheme = 'dark';
     }
     return prof;
+  }
+
+  isStatusReminderDismissedToday(): boolean {
+    if (!this.isBrowser()) return false;
+    const dismissedDate = localStorage.getItem('chinux_status_reminder_dismissed_date');
+    const today = new Date().toISOString().split('T')[0];
+    return dismissedDate === today;
+  }
+
+  dismissStatusReminderForToday(): void {
+    if (!this.isBrowser()) return;
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('chinux_status_reminder_dismissed_date', today);
+    this.emitUpdate();
   }
 
   saveProfile(profile: TraderProfile): void {

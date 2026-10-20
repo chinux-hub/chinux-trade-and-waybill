@@ -214,8 +214,7 @@ export default function SuperAdminPage() {
             </button>
           </form>
 
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500">
-            <span>Passkey hint: <code className="text-slate-400">chinux2026</code></span>
+          <div className="pt-2 border-t border-slate-800 flex items-center justify-end text-xs text-slate-500">
             <Link href="/dashboard" className="text-rose-400 hover:underline flex items-center gap-1">
               <span>Exit to App</span>
             </Link>

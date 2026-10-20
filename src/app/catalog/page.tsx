@@ -18,10 +18,12 @@ export default function CatalogPage() {
   const [selectedProductForBroadcast, setSelectedProductForBroadcast] = useState<CatalogProduct | null>(null);
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [policy, setPolicy] = useState(storage.getPolicy());
 
   useEffect(() => {
     setProfile(storage.getProfile());
     setProducts(storage.getCatalog());
+    setPolicy(storage.getPolicy());
   }, []);
 
   const isUnlocked = storage.isStockBroadcastUnlocked();
@@ -76,7 +78,7 @@ export default function CatalogPage() {
               WhatsApp Stock Broadcast & Status Automation Locked
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md">
-              Your 30-day free trial has expired. Subscribe to Chinux Pro to broadcast arrival photos to customers and auto-post stock flyers to WhatsApp Status.
+              Your {policy.freeTrialDays || 30}-day free trial has expired. Subscribe to Chinux Pro to broadcast arrival photos to customers and auto-post stock flyers to WhatsApp Status.
             </p>
             <button
               type="button"

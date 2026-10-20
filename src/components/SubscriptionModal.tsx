@@ -138,7 +138,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               </h3>
               <p className="text-[10px] text-slate-400">
                 {trialDaysLeft > 0
-                  ? `Active 30-Day Trial: ${trialDaysLeft} days remaining`
+                  ? `Active ${policy.freeTrialDays || 30}-Day Free Trial: ${trialDaysLeft} days remaining`
                   : 'Free Trial Expired • Choose a Subscription Plan'}
               </p>
             </div>

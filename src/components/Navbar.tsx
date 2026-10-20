@@ -52,12 +52,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [profile, setProfile] = useState<TraderProfile | null>(null);
   const [currentUser, setCurrentUser] = useState<UserType | null>(null);
+  const [policy, setPolicy] = useState(storage.getPolicy());
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [copiedInvite, setCopiedInvite] = useState(false);
 
   const refreshState = () => {
     setProfile(storage.getProfile());
     setCurrentUser(storage.getCurrentUser());
+    setPolicy(storage.getPolicy());
   };
 
   useEffect(() => {
@@ -226,7 +228,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 font-extrabold text-slate-900 dark:text-white">
                     <Crown className="w-4 h-4 text-amber-500" />
-                    <span>{isSubscribed ? 'Pro Membership Active' : '30-Day Free Trial'}</span>
+                    <span>{isSubscribed ? 'Pro Membership Active' : `${policy?.freeTrialDays || 30}-Day Free Trial`}</span>
                   </div>
                   <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
                     {isSubscribed ? 'Unlimited' : `${trialDaysLeft}d left`}

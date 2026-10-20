@@ -1246,6 +1246,7 @@ class StorageManager {
 
   savePolicy(policy: PlatformPolicy): void {
     this.setItem('policy', policy);
+    this.emitUpdate();
   }
 
   // ==========================================

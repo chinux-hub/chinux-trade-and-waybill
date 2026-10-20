@@ -271,7 +271,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 <>
                   <Sparkles className="w-4 h-4" />
                   <span>
-                    Pay with Paystack • {formatNaira(selectedTier === 'monthly' ? monthlyPrice : yearlyPrice)}
+                    Go Premium • {formatNaira(selectedTier === 'monthly' ? monthlyPrice : yearlyPrice)}
                   </span>
                 </>
               )}

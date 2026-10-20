@@ -74,12 +74,21 @@ export default function RootLayout({
         .catch((err) => console.log('Service Worker registration failed:', err));
     }
 
+    // Auto-trigger gamified onboarding tutorial for first-time traders
+    const hasCompletedTutorial = localStorage.getItem('chinux_onboarding_completed');
+    if (!hasCompletedTutorial && !isAdminPage && !isPublicLanding) {
+      const timer = setTimeout(() => {
+        setIsTutorialOpen(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
     };
-  }, []);
+  }, [isAdminPage, isPublicLanding]);
 
   const handleToggleTheme = (newTheme: string) => {
     setTheme(newTheme);

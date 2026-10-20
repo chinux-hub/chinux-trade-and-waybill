@@ -23,6 +23,7 @@ import {
   Lock,
   ArrowRight,
   ShoppingBag,
+  Trophy,
 } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { Role, TraderProfile, User as UserType } from '@/types';
@@ -359,6 +360,25 @@ export const Navbar: React.FC<NavbarProps> = ({
 
               {/* 4. Secondary Action Buttons */}
               <div className="space-y-1.5 pt-1">
+                {/* Master Trader Quest (Gamified Tour) */}
+                <button
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    onOpenTutorial();
+                  }}
+                  className="w-full p-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-emerald-500/10 border border-amber-500/30 flex items-center justify-between text-slate-900 dark:text-white font-bold group hover:border-amber-500/60 transition-all shadow-sm"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 rounded-lg bg-amber-500/20 text-amber-500">
+                      <Trophy className="w-4 h-4" />
+                    </div>
+                    <span>Master Trader Quest (Tour)</span>
+                  </div>
+                  <span className="text-[10px] bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Play
+                  </span>
+                </button>
+
                 <button
                   onClick={() => {
                     setIsDrawerOpen(false);

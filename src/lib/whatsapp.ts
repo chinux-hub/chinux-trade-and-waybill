@@ -15,6 +15,22 @@ export function createWhatsAppLink(phoneNumber: string, message: string): string
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
+export function createSmsLink(phoneNumber: string, message: string): string {
+  let cleanPhone = (phoneNumber || '').replace(/\D/g, '');
+  if (cleanPhone.startsWith('0') && cleanPhone.length === 11) {
+    cleanPhone = '+234' + cleanPhone.slice(1);
+  } else if (!cleanPhone.startsWith('+') && cleanPhone.startsWith('234')) {
+    cleanPhone = '+' + cleanPhone;
+  }
+  // Strip markdown formatting for clear standard SMS delivery across Nigerian networks (MTN, Airtel, Glo, 9mobile)
+  const plainTextMessage = message
+    .replace(/\*/g, '')
+    .replace(/_/g, '')
+    .trim();
+  const separator = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent) ? '&' : '?';
+  return `sms:${cleanPhone}${cleanPhone ? separator : '?'}body=${encodeURIComponent(plainTextMessage)}`;
+}
+
 export function generateWaybillBuyerMessage(waybill: Waybill, profile: TraderProfile, originUrl: string): string {
   const waybillUrl = `${originUrl}/waybill/${waybill.id}`;
   return `📦 *WAYBILL DISPATCH CONFIRMATION*\n` +

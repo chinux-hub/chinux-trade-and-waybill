@@ -122,28 +122,28 @@ export default function WelcomePage() {
 
       {/* Top Banner Navigation */}
       <nav className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-sm border border-emerald-500/20 bg-white">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2">
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-sm border border-emerald-500/20 bg-white flex-shrink-0">
               <img src="/chinux-logo.png" alt="Chinux" className="w-full h-full object-cover" />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight text-white">
+                <span className="font-extrabold text-lg sm:text-xl tracking-tight text-white">
                   CHIN<span className="text-emerald-400">UX</span>
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                  TradeBill
+                <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+                  Trade
                 </span>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium">Nigerian Wholesale OS</span>
+              <span className="text-[9px] text-slate-400 font-medium hidden sm:block truncate">Wholesale Operating System</span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <Link
               href="/join"
-              className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-bold transition-all"
+              className="hidden sm:inline-flex px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-bold transition-all whitespace-nowrap"
             >
               Apprentice Join
             </Link>
@@ -151,18 +151,19 @@ export default function WelcomePage() {
             {currentUser ? (
               <Link
                 href="/dashboard"
-                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1.5"
+                className="px-3 sm:px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap flex-shrink-0"
               >
-                <span>Dashboard ({currentUser.name.split(' ')[0]})</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>Dashboard</span>
+                <span className="hidden md:inline">({currentUser.name.split(' ')[0]})</span>
+                <ArrowRight className="w-3.5 h-3.5 flex-shrink-0" />
               </Link>
             ) : (
               <button
                 onClick={() => setIsAuthOpen(true)}
-                className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1.5"
+                className="px-3 sm:px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all flex items-center gap-1 sm:gap-1.5 whitespace-nowrap flex-shrink-0"
               >
                 <LogIn className="w-3.5 h-3.5" />
-                <span>Sign In / Enter App</span>
+                <span>Sign In</span>
               </button>
             )}
           </div>

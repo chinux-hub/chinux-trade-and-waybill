@@ -43,6 +43,13 @@ const DEFAULT_PROFILE: TraderProfile = {
     apprenticeCanPostStatus: true,
     preferredStatusPoster: 'both',
   },
+  messagingSettings: {
+    mode: 'auto',
+    channel: 'both',
+    autoStatusUpdates: true,
+    autoWaybillDispatch: true,
+    autoUgwoReminders: true,
+  },
 };
 
 const DEFAULT_POLICY: PlatformPolicy = {
@@ -560,7 +567,17 @@ class StorageManager {
   // PROFILE & ROLES (OGA vs NWABOYI SOVEREIGNTY)
   // ==========================================
   getProfile(): TraderProfile {
-    return this.getItem<TraderProfile>('profile', DEFAULT_PROFILE);
+    const prof = this.getItem<TraderProfile>('profile', DEFAULT_PROFILE);
+    if (!prof.messagingSettings) {
+      prof.messagingSettings = {
+        mode: 'auto',
+        channel: 'both',
+        autoStatusUpdates: true,
+        autoWaybillDispatch: true,
+        autoUgwoReminders: true,
+      };
+    }
+    return prof;
   }
 
   saveProfile(profile: TraderProfile): void {

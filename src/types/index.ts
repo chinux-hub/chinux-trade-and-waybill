@@ -46,6 +46,18 @@ export interface BankTransaction {
   matchedWaybillNumber?: string;
 }
 
+export type MessagingMode = 'auto' | 'manual';
+export type MessagingChannel = 'both' | 'whatsapp' | 'sms';
+
+export interface AutoMessagingSettings {
+  mode: MessagingMode; // default: 'auto'
+  channel: MessagingChannel; // default: 'both'
+  autoStatusUpdates: boolean; // default: true
+  autoWaybillDispatch: boolean; // default: true
+  autoUgwoReminders: boolean; // default: true
+  smsSenderName?: string;
+}
+
 export interface TraderProfile {
   businessName: string;
   ownerName?: string;
@@ -71,6 +83,7 @@ export interface TraderProfile {
   masterShopName?: string;
   masterShopId?: string;
   joinedApprentices?: { id: string; name: string; joinedAt: string; email: string }[];
+  messagingSettings?: AutoMessagingSettings;
 }
 
 export interface OgaPermissions {

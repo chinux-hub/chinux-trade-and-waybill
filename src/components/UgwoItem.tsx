@@ -6,6 +6,7 @@ import { Waybill, TraderProfile } from '@/types';
 import { formatNaira, formatDate } from '@/lib/formatters';
 import {
   createWhatsAppLink,
+  createSmsLink,
   generateUgwoReminderPolite,
   generateUgwoReminderPidgin,
   generatePaymentReceiptMessage,
@@ -31,6 +32,7 @@ export const UgwoItem: React.FC<UgwoItemProps> = ({ waybill, profile, onPaymentS
       : generateUgwoReminderPidgin(waybill, profile);
 
   const whatsappUrl = createWhatsAppLink(waybill.customerPhone, reminderMessage);
+  const smsUrl = createSmsLink(waybill.customerPhone, reminderMessage);
 
   const handleSettle = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,10 +112,18 @@ export const UgwoItem: React.FC<UgwoItemProps> = ({ waybill, profile, onPaymentS
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1.5 transition-colors text-[11px]"
+              className="flex-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center justify-center gap-1 transition-colors text-[11px]"
+              title="Send Reminder via WhatsApp"
             >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>Send Reminder</span>
+              <MessageSquare className="w-3 h-3" />
+              <span>WhatsApp</span>
+            </a>
+            <a
+              href={smsUrl}
+              className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-100 border-l border-emerald-700/60 font-bold flex items-center justify-center gap-1 transition-colors text-[11px]"
+              title="Send Reminder via SMS"
+            >
+              <span>SMS</span>
             </a>
           </div>
 

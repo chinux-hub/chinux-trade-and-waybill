@@ -15,12 +15,14 @@ import {
   Clock,
   ShieldCheck,
   AlertTriangle,
+  MessageSquare,
 } from 'lucide-react';
 import { storage } from '@/lib/storage';
 import { Waybill, TraderProfile } from '@/types';
 import { formatNaira, formatDateTime, formatDate } from '@/lib/formatters';
 import {
   createWhatsAppLink,
+  createSmsLink,
   generateWaybillBuyerMessage,
   generateWaybillDriverMessage,
 } from '@/lib/whatsapp';
@@ -77,14 +79,14 @@ export default function WaybillDetailPage() {
   };
 
   const originUrl = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';
-  const buyerWhatsapp = createWhatsAppLink(
-    waybill.customerPhone,
-    generateWaybillBuyerMessage(waybill, profile, originUrl)
-  );
-  const driverWhatsapp = createWhatsAppLink(
-    waybill.driverPhone,
-    generateWaybillDriverMessage(waybill, profile)
-  );
+  const buyerMessage = generateWaybillBuyerMessage(waybill, profile, originUrl);
+  const driverMessage = generateWaybillDriverMessage(waybill, profile);
+
+  const buyerWhatsapp = createWhatsAppLink(waybill.customerPhone, buyerMessage);
+  const buyerSms = createSmsLink(waybill.customerPhone, buyerMessage);
+
+  const driverWhatsapp = createWhatsAppLink(waybill.driverPhone, driverMessage);
+  const driverSms = createSmsLink(waybill.driverPhone, driverMessage);
 
   const milestones = [
     { label: 'Dispatched (Onitsha)', status: 'loading', date: formatDateTime(waybill.createdAt) },
@@ -287,27 +289,47 @@ export default function WaybillDetailPage() {
           )}
         </div>
 
-        {/* Share Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-          <a
-            href={buyerWhatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md"
-          >
-            <Share2 className="w-4 h-4" />
-            <span>Send Waybill & PIN to Buyer</span>
-          </a>
+        {/* Share Actions: WhatsApp & SMS */}
+        <div className="space-y-2 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <a
+              href={buyerWhatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+            >
+              <Share2 className="w-4 h-4" />
+              <span>WhatsApp Buyer (PIN Slip)</span>
+            </a>
 
-          <a
-            href={driverWhatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md"
-          >
-            <Truck className="w-4 h-4" />
-            <span>Send Manifest to Driver</span>
-          </a>
+            <a
+              href={buyerSms}
+              className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-100 border border-slate-700 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+            >
+              <MessageSquare className="w-4 h-4 text-emerald-400" />
+              <span>SMS Buyer (PIN Slip)</span>
+            </a>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <a
+              href={driverWhatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+            >
+              <Truck className="w-4 h-4 text-emerald-400" />
+              <span>WhatsApp Driver Manifest</span>
+            </a>
+
+            <a
+              href={driverSms}
+              className="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-900 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+            >
+              <MessageSquare className="w-4 h-4 text-blue-400" />
+              <span>SMS Driver Manifest</span>
+            </a>
+          </div>
         </div>
       </div>
 

@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Share2, X, Send, Smartphone, Sparkles, Lock, CheckCircle, ShieldAlert, Image as ImageIcon } from 'lucide-react';
+import { Share2, X, Send, Smartphone, Sparkles, Lock, CheckCircle, ShieldAlert, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import { CatalogProduct, TraderProfile } from '@/types';
 import { storage } from '@/lib/storage';
 import { formatNaira } from '@/lib/formatters';
+import { createSmsLink } from '@/lib/whatsapp';
 
 interface StockBroadcastModalProps {
   product: CatalogProduct | null;
@@ -289,13 +290,13 @@ _⚡ Powered by Chinux Wholesale Trade & Logistics_`;
           </pre>
         </div>
 
-        {/* Action Button */}
-        <div className="pt-2">
+        {/* Action Buttons: WhatsApp & Direct SMS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
           <button
             type="button"
             disabled={isApprentice && !apprenticeAllowed}
             onClick={handleSend}
-            className={`w-full py-3 rounded-2xl font-black text-xs text-white shadow-lg transition-all flex items-center justify-center gap-2 ${
+            className={`py-3 rounded-2xl font-black text-xs text-white shadow-lg transition-all flex items-center justify-center gap-2 ${
               isApprentice && !apprenticeAllowed
                 ? 'bg-slate-400 cursor-not-allowed'
                 : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30'
@@ -303,8 +304,21 @@ _⚡ Powered by Chinux Wholesale Trade & Logistics_`;
           >
             <Send className="w-4 h-4" />
             <span>
-              {mode === 'status' ? 'Open WhatsApp to Post on Status' : 'Open WhatsApp to Send Message'}
+              {mode === 'status' ? 'Post to WhatsApp Status' : 'Send via WhatsApp'}
             </span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isApprentice && !apprenticeAllowed}
+            onClick={() => {
+              const smsUrl = createSmsLink(customerPhone, broadcastText);
+              window.open(smsUrl, '_self');
+            }}
+            className="py-3 rounded-2xl font-black text-xs text-slate-100 bg-slate-900 hover:bg-slate-800 border border-slate-700 shadow-md transition-all flex items-center justify-center gap-2"
+          >
+            <MessageSquare className="w-4 h-4 text-emerald-400" />
+            <span>Send via SMS</span>
           </button>
         </div>
       </div>

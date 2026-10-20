@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Settings, ShieldCheck, ShieldAlert, Building2, CreditCard, Save, ArrowLeft, CheckCircle2, UserPlus, Share2, Copy, Smartphone, Sparkles } from 'lucide-react';
+import { Settings, ShieldCheck, ShieldAlert, Building2, CreditCard, Save, ArrowLeft, CheckCircle2, UserPlus, Share2, Copy, Smartphone, Sparkles, MessageSquare, Send, Bell } from 'lucide-react';
 import { storage } from '@/lib/storage';
-import { TraderProfile, OgaPermissions } from '@/types';
+import { TraderProfile, OgaPermissions, AutoMessagingSettings } from '@/types';
 
 export default function SettingsPage() {
   const [profile, setProfile] = useState<TraderProfile>(storage.getProfile());
@@ -25,6 +25,30 @@ export default function SettingsPage() {
       permissions: {
         ...prev.permissions,
         [key]: !prev.permissions[key],
+      },
+    }));
+  };
+
+  const messagingSettings: AutoMessagingSettings = profile.messagingSettings || {
+    mode: 'auto',
+    channel: 'both',
+    autoStatusUpdates: true,
+    autoWaybillDispatch: true,
+    autoUgwoReminders: true,
+  };
+
+  const handleUpdateMessaging = <K extends keyof AutoMessagingSettings>(key: K, value: AutoMessagingSettings[K]) => {
+    setProfile((prev) => ({
+      ...prev,
+      messagingSettings: {
+        ...(prev.messagingSettings || {
+          mode: 'auto',
+          channel: 'both',
+          autoStatusUpdates: true,
+          autoWaybillDispatch: true,
+          autoUgwoReminders: true,
+        }),
+        [key]: value,
       },
     }));
   };
@@ -347,6 +371,170 @@ export default function SettingsPage() {
                 value={profile.marketLocation}
                 onChange={(e) => setProfile({ ...profile, marketLocation: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Automated Messaging & Notifications Hub (WhatsApp & SMS) */}
+        <div className="p-6 rounded-3xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm">
+              <MessageSquare className="w-5 h-5 text-emerald-600" />
+              <span>Automated Messaging & Notifications (WhatsApp & SMS)</span>
+            </div>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+              {messagingSettings.mode === 'auto' ? '⚡ Auto Active' : '✋ Manual Active'}
+            </span>
+          </div>
+
+          <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
+            Customize whether waybill dispatch manifests, pickup PINs, debtor ugwo reminders, and stock status flyers are sent automatically or on manual tap across WhatsApp and SMS.
+          </p>
+
+          {/* Mode Selection */}
+          <div className="space-y-2">
+            <label className="block font-bold text-slate-700 dark:text-slate-300">
+              Messaging Mode
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleUpdateMessaging('mode', 'auto')}
+                className={`p-3.5 rounded-2xl border text-left transition-all ${
+                  messagingSettings.mode === 'auto'
+                    ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <div className="font-extrabold text-xs flex items-center justify-between">
+                  <span>⚡ Automatic (Recommended)</span>
+                  {messagingSettings.mode === 'auto' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  Triggers ready-to-send alerts and manifests instantly upon dispatch and due dates without extra clicks.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleUpdateMessaging('mode', 'manual')}
+                className={`p-3.5 rounded-2xl border text-left transition-all ${
+                  messagingSettings.mode === 'manual'
+                    ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <div className="font-extrabold text-xs flex items-center justify-between">
+                  <span>✋ Manual Confirmation</span>
+                  {messagingSettings.mode === 'manual' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  You preview and tap before sending each WhatsApp or SMS message.
+                </p>
+              </button>
+            </div>
+          </div>
+
+          {/* Delivery Channel */}
+          <div className="space-y-2">
+            <label className="block font-bold text-slate-700 dark:text-slate-300">
+              Delivery Channel
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleUpdateMessaging('channel', 'both')}
+                className={`py-2 px-2 text-center rounded-xl font-bold border transition-all ${
+                  messagingSettings.channel === 'both'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+                }`}
+              >
+                Both WhatsApp & SMS
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateMessaging('channel', 'whatsapp')}
+                className={`py-2 px-2 text-center rounded-xl font-bold border transition-all ${
+                  messagingSettings.channel === 'whatsapp'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+                }`}
+              >
+                WhatsApp Only
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateMessaging('channel', 'sms')}
+                className={`py-2 px-2 text-center rounded-xl font-bold border transition-all ${
+                  messagingSettings.channel === 'sms'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-slate-50 dark:bg-navy-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+                }`}
+              >
+                Direct SMS Only
+              </button>
+            </div>
+          </div>
+
+          {/* Automations Toggles */}
+          <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <label className="block font-bold text-slate-700 dark:text-slate-300">
+              Notification Automations
+            </label>
+
+            {/* Auto for Status Updates (Default ON) */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
+              <div className="pr-4">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
+                  Auto WhatsApp / SMS Status Flyers (Default ON)
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Default: Generates instant WhatsApp status flyers and stock broadcast text when uploading stock.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={messagingSettings.autoStatusUpdates}
+                onChange={(e) => handleUpdateMessaging('autoStatusUpdates', e.target.checked)}
+                className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+              />
+            </div>
+
+            {/* Auto Waybill Dispatch Alerts */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
+              <div className="pr-4">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
+                  Auto Waybill & 4-Digit PIN Notifications
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Pre-formats and readies buyer secret PIN pickup slip and driver haulage manifest.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={messagingSettings.autoWaybillDispatch}
+                onChange={(e) => handleUpdateMessaging('autoWaybillDispatch', e.target.checked)}
+                className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+              />
+            </div>
+
+            {/* Auto Ugwo Debt Recovery */}
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800">
+              <div className="pr-4">
+                <span className="font-bold text-slate-800 dark:text-slate-200 block text-xs">
+                  Auto Debt Collection Reminders (Ugwo)
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Pre-populates reminders with verified shop bank account details on due dates.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={messagingSettings.autoUgwoReminders}
+                onChange={(e) => handleUpdateMessaging('autoUgwoReminders', e.target.checked)}
+                className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
               />
             </div>
           </div>

@@ -251,7 +251,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                  <span><strong>Bank Statement Auto-Sync</strong> with Moniepoint, Zenith & GTBank</span>
+                  <span><strong>Direct Bank Reconciliation</strong> with Moniepoint, Zenith & GTBank</span>
                 </li>
               </ul>
             </div>

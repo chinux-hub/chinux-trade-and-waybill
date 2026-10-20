@@ -85,7 +85,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
             </div>
             <div>
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                Bank Auto-Sync & Open Banking
+                Bank Integration & Open Banking
               </h3>
               <p className="text-[10px] text-slate-400">
                 Connect your business bank account for automated transaction recording
@@ -240,7 +240,7 @@ export const BankConnectModal: React.FC<BankConnectModalProps> = ({ isOpen, onCl
               ) : (
                 <>
                   <Building2 className="w-4 h-4" />
-                  <span>Connect & Enable Automated Sync</span>
+                  <span>Connect & Link Bank Account</span>
                 </>
               )}
             </button>

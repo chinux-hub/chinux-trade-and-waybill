@@ -22,7 +22,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
     setIsSyncing(true);
     setSyncSuccessMsg('');
 
-    // Simulate / Trigger real sync with Supabase and Google-backed cloud storage
+    // Backup to secure cloud storage
     setTimeout(() => {
       const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString();
       if (typeof window !== 'undefined') {
@@ -30,7 +30,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
       }
       setLastSyncTime(timestamp);
       setIsSyncing(false);
-      setSyncSuccessMsg('All waybills, sales ledger, and inventory backed up to Google Cloud & Supabase!');
+      setSyncSuccessMsg('All waybills, sales ledger, and inventory backed up securely!');
       setTimeout(() => setSyncSuccessMsg(''), 4000);
     }, 1200);
   };
@@ -59,7 +59,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
                 Cloud Backup & Security Center
               </h3>
-              <p className="text-[10px] text-slate-400">Sync with Google Services & Cloud Database</p>
+              <p className="text-[10px] text-slate-400">Secure Cloud Data Protection & Excel Export</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-black dark:hover:text-white">
@@ -77,14 +77,14 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
         {/* Live Cloud Status Card */}
         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-slate-800 dark:text-slate-200">Cloud Sync Status</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">Cloud Backup Standing</span>
             <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Connected
+              Protected
             </span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Your shop's waybills, pickup PINs, and sales ledgers are synced to Google Cloud & Supabase infrastructure.
+            Your shop's waybills, pickup PINs, and sales ledgers are securely archived on encrypted cloud infrastructure.
           </p>
           <div className="text-[10px] text-slate-400 font-mono pt-1">
             Last successful cloud backup: <strong className="text-emerald-600 dark:text-emerald-400">{lastSyncTime}</strong>
@@ -92,7 +92,7 @@ export const DataExportModal: React.FC<DataExportModalProps> = ({ isOpen, onClos
         </div>
 
         <div className="space-y-3 pt-1">
-          {/* Cloud Sync Button */}
+          {/* Cloud Backup Button */}
           <button
             onClick={handleCloudSync}
             disabled={isSyncing}

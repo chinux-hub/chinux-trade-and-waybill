@@ -366,7 +366,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <Building2 className="w-4 h-4 text-blue-600" />
-                    <span>Bank Auto-Sync (Open Banking)</span>
+                    <span>Bank Reconciliations (Open Banking)</span>
                   </div>
                   <span className="text-[10px] text-emerald-500 font-bold">{isBankConnected ? 'Active' : 'Setup'}</span>
                 </button>

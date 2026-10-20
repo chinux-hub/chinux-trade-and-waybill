@@ -106,7 +106,7 @@ export default function WelcomePage() {
     {
       title: 'Cash Flow & Bank Reconciliations',
       location: 'Moniepoint, Zenith, GTBank & OPay Desks',
-      desc: 'Automated statement sync instantly reconciles incoming transfer alerts against customer credit ledgers (Ugwo).',
+      desc: 'Instant bank transfer reconciliation against customer credit ledgers (Ugwo).',
       image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80',
       tag: 'Automated Ledgers',
     },
@@ -215,7 +215,7 @@ export default function WelcomePage() {
         <div className="text-[11px] text-slate-400 pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-5">
           <span>✓ 30-Day Unlimited Free Trial</span>
           <span>•</span>
-          <span>✓ Moniepoint, Zenith & GTBank Auto-Sync</span>
+          <span>✓ Moniepoint, Zenith & GTBank Integration</span>
           <span>•</span>
           <span>✓ 100% Works Offline</span>
           <span>•</span>
@@ -317,12 +317,12 @@ export default function WelcomePage() {
             </p>
           </div>
 
-          {/* Pillar 4: Bank Auto-Sync */}
+          {/* Pillar 4: Bank Reconciliations */}
           <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-3 shadow-lg card-glow-scroll hover:border-emerald-500/80 transition-all">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5" />
             </div>
-            <h3 className="font-extrabold text-base text-white">Automated Bank Statement Sync</h3>
+            <h3 className="font-extrabold text-base text-white">Automated Bank Statement Matching</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
               Connect your Moniepoint, Zenith, GTBank, or OPay account. Incoming customer transfers are automatically detected, matched to waybills, and logged into your Daily Sales Logbook.
             </p>
@@ -346,7 +346,7 @@ export default function WelcomePage() {
             </div>
             <h3 className="font-extrabold text-base text-white">Install as Mobile App (100% Offline)</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Install Chinux TradeBill as a native app on Android or iPhone. Work completely offline in market conditions with zero network; all your waybills and sales automatically sync once reconnected.
+              Install Chinux TradeBill as a native app on Android or iPhone. Work completely offline in market conditions with zero network to generate waybills, log transactions, and collect debt.
             </p>
           </div>
         </div>

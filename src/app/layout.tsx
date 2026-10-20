@@ -115,7 +115,7 @@ export default function RootLayout({
             <div className="flex items-center gap-2 mx-auto">
               <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
               <span>
-                ⚡ Offline Mode: Working offline. All waybills & sales will automatically sync once reconnected.
+                ⚡ Offline Mode: Working offline. All waybills, debt records & sales are safely saved on this device.
               </span>
             </div>
             <button

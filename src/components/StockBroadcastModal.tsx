@@ -101,7 +101,14 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
   const selectedProducts = catalog.filter((p) => selectedProductIds.includes(p.id));
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';
-  const storefrontUrl = `${origin}/store`;
+  const baseStorefrontUrl = `${origin}/store`;
+  const storeParams = new URLSearchParams();
+  if (profile.businessName) storeParams.set('shop', profile.businessName);
+  if (profile.phone) storeParams.set('phone', profile.phone);
+  const storefrontUrl = `${baseStorefrontUrl}?${storeParams.toString()}`;
+
+  // Multi-Channel Social Media Broadcast Mode
+  const [socialChannel, setSocialChannel] = useState<'whatsapp' | 'facebook' | 'instagram' | 'tiktok' | 'sms'>('whatsapp');
 
   // Total slides = Selected products + 1 final slide (solely for the storefront link)
   const totalSlides = selectedProducts.length + 1;
@@ -113,11 +120,18 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
     const params = new URLSearchParams();
     params.set('product', prod.id);
     params.set('title', prod.name);
+    params.set('cat', prod.category);
     if (includePrice) {
       params.set('price', formatNaira(prod.wholesalePrice));
     }
     if (prod.imageUrl && prod.imageUrl.startsWith('http')) {
       params.set('img', prod.imageUrl);
+    }
+    if (profile.businessName) {
+      params.set('shop', profile.businessName);
+    }
+    if (profile.phone) {
+      params.set('phone', profile.phone);
     }
     const productUrl = `${origin}/store?${params.toString()}`;
 
@@ -552,21 +566,84 @@ ${items}
     handleSendToWhatsApp(caption);
   };
 
+  // ==============================================================
+  // 🌐 MULTI-CHANNEL SOCIAL MEDIA SHARING HANDLERS
+  // ==============================================================
+  const handleShareToFacebook = (prod?: CatalogProduct | null) => {
+    const targetUrl = prod
+      ? `${origin}/store?product=${prod.id}&title=${encodeURIComponent(prod.name)}&shop=${encodeURIComponent(profile.businessName || '')}&phone=${encodeURIComponent(profile.phone || '')}`
+      : storefrontUrl;
+    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(targetUrl)}`;
+    window.open(fbShareUrl, '_blank', 'width=620,height=520');
+  };
+
+  const handleShareToInstagram = (prod?: CatalogProduct | null) => {
+    const caption = prod
+      ? `📦 NEW WHOLESALE STOCK ARRIVAL: ${prod.name}
+💰 Wholesale Rate: ${includePrice ? `${formatNaira(prod.wholesalePrice)} / carton` : 'DM for Wholesale Price'}
+🏢 Shop: ${profile.businessName || 'Wholesale Importer'}
+📍 Market Location: ${profile.marketLocation || 'Onitsha & Lagos Wholesale Hubs'}
+🚚 Nationwide Motor Park Waybill Dispatch with Anti-Theft 4-Digit Pickup PIN!
+👉 Tap the Link in Bio or DM to order on WhatsApp: ${storefrontUrl}
+
+#WholesaleNigeria #AlabaMarket #OnitshaMainMarket #TradeFairLagos #NigerianTraders #Chinux`
+      : `🛒 ${profile.businessName || 'Wholesale Importer'} - Daily Wholesale Arrivals & Container Rates!
+🚚 Nationwide Motor Park Waybill Dispatch!
+👉 Browse & Order Online: ${storefrontUrl}
+📞 WhatsApp/Call: ${profile.phone}
+
+#WholesaleNigeria #ImportGoods #AlabaMarket #OnitshaMainMarket #TradeBill`;
+
+    navigator.clipboard.writeText(caption);
+    setCopiedIndex(777);
+    setTimeout(() => setCopiedIndex(null), 3000);
+    window.open('https://www.instagram.com/', '_blank');
+  };
+
+  const handleShareToTikTok = (prod?: CatalogProduct | null) => {
+    const script = prod
+      ? `🔥 NEW WHOLESALE CONTAINER ARRIVAL!
+Product: ${prod.name}
+Wholesale Price: ${includePrice ? `${formatNaira(prod.wholesalePrice)} / carton` : 'Check Bio for wholesale price'}
+Nationwide Motor park waybill dispatch with 4-digit pickup PIN!
+Tap link in bio to order directly on WhatsApp!
+Shop: ${profile.businessName}
+
+#WholesaleNigeria #MotorParkHaulage #ChinuxTrade #LagosWholesale #OnitshaMainMarket`
+      : `🔥 Wholesale Goods Just Landed at Our Shop!
+Browse our live digital catalog and order via waybill.
+Link in bio!
+Shop: ${profile.businessName}
+
+#WholesaleNigeria #ChinuxTrade #TradeFairLagos #OnitshaMainMarket`;
+
+    navigator.clipboard.writeText(script);
+    setCopiedIndex(888);
+    setTimeout(() => setCopiedIndex(null), 3000);
+    window.open('https://www.tiktok.com/', '_blank');
+  };
+
+  const handleShareToSMS = (text: string) => {
+    const cleanText = text.replace(/[*_]/g, '');
+    const smsUrl = `sms:?body=${encodeURIComponent(cleanText)}`;
+    window.open(smsUrl, '_blank');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-navy-900 w-full max-w-xl rounded-3xl p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4 max-h-[94vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2.5 sm:p-4 animate-fadeIn">
+      <div className="bg-white dark:bg-navy-900 w-full max-w-xl rounded-3xl p-3.5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5 max-h-[92vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2.5 rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400">
-              <Share2 className="w-5 h-5" />
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5 shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-2xl bg-gradient-to-tr from-emerald-500 to-purple-600 text-white shadow-sm">
+              <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
-                WhatsApp Status Broadcast Studio
+              <h2 className="text-xs sm:text-base font-black text-slate-900 dark:text-white leading-tight">
+                Social Media & Status Broadcast Studio
               </h2>
-              <span className="text-[11px] text-slate-500 block">
-                1-click upload for all products with zero text limits
+              <span className="text-[10px] text-slate-500 block">
+                Organize & send products to WhatsApp, Facebook, Instagram & TikTok
               </span>
             </div>
           </div>
@@ -578,118 +655,313 @@ ${items}
           </button>
         </div>
 
-        {/* Lock Overlay if Free Trial Expired and not subscribed */}
-        {!isUnlocked && (
-          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2">
-            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs">
-              <Lock className="w-4 h-4 text-amber-600" />
-              <span>{policy.freeTrialDays || 30}-Day Free Trial Expired - Feature Locked</span>
-            </div>
-            <p className="text-[11px] text-amber-700 dark:text-amber-400">
-              Automated WhatsApp Stock Broadcast & Status Flyers are available on the Chinux Pro plan.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                window.dispatchEvent(new CustomEvent('chinux-open-subscription'));
-              }}
-              className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition-all"
-            >
-              Go Premium (₦3,500/mo) to Unlock
-            </button>
-          </div>
-        )}
+        {/* 📱 SOCIAL CHANNEL SELECTOR TABS (Accommodates Mobile & Tablet) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 pb-1">
+          <button
+            type="button"
+            onClick={() => setSocialChannel('whatsapp')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              socialChannel === 'whatsapp'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span>WhatsApp Status</span>
+          </button>
 
-        {/* Apprentice Restriction Warning if Oga turned it off */}
-        {isApprentice && !apprenticeAllowed && (
-          <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-red-500 shrink-0" />
-            <span>Oga has restricted apprentices from broadcasting stock. Ask Oga for permission in Settings.</span>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={() => setSocialChannel('facebook')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              socialChannel === 'facebook'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-blue-400" />
+            <span>Facebook</span>
+          </button>
 
-        {/* ============================================================== */}
-        {/* ⚡ 1-CLICK ALL-PRODUCTS DISPATCH TO WHATSAPP STATUS             */}
-        {/* ============================================================== */}
-        <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-950/90 via-slate-900 to-navy-950 border-2 border-emerald-500/60 text-white space-y-3 shadow-xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-400">
-                <Flame className="w-4 h-4" />
-              </span>
-              <span className="text-xs font-black uppercase tracking-wider text-emerald-300">
-                Send All Products at Once (No Line Limits)
-              </span>
-            </div>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-              {selectedProducts.length} Items Selected
-            </span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setSocialChannel('instagram')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              socialChannel === 'instagram'
+                ? 'bg-pink-600 text-white shadow-sm'
+                : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-pink-400" />
+            <span>Instagram</span>
+          </button>
 
-          <p className="text-[11px] text-slate-300 leading-relaxed">
-            WhatsApp text status has a 10-line limit. Use these 1-click tools to send your complete inventory at once without getting blocked:
-          </p>
+          <button
+            type="button"
+            onClick={() => setSocialChannel('tiktok')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              socialChannel === 'tiktok'
+                ? 'bg-slate-900 dark:bg-slate-800 text-white border border-slate-700 shadow-sm'
+                : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+            <span>TikTok</span>
+          </button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            {/* METHOD 1: ALL-IN-ONE GRAPHIC CATALOG FLYER */}
-            <div className="p-3 rounded-2xl bg-white/5 border border-emerald-500/30 space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>1-Click Catalog Price Flyer</span>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">
-                  Auto-generates a single visual price poster of all selected goods.
-                </p>
+          <button
+            type="button"
+            onClick={() => setSocialChannel('sms')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
+              socialChannel === 'sms'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'bg-slate-100 dark:bg-navy-950 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span>SMS / Direct</span>
+          </button>
+        </div>
+
+        {/* Scrollable Body Content */}
+        <div className="overflow-y-auto space-y-3.5 pr-0.5 flex-1">
+          {/* Lock Overlay if Free Trial Expired and not subscribed */}
+          {!isUnlocked && (
+            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs">
+                <Lock className="w-4 h-4 text-amber-600" />
+                <span>{policy.freeTrialDays || 30}-Day Free Trial Expired - Feature Locked</span>
               </div>
-
-              <div className="flex gap-1.5 pt-1">
-                <button
-                  type="button"
-                  disabled={isGeneratingFlyer || selectedProducts.length === 0}
-                  onClick={handleShareFlyerStatus}
-                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>{isGeneratingFlyer ? 'Creating...' : 'Upload Flyer to Status'}</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={isGeneratingFlyer || selectedProducts.length === 0}
-                  onClick={handleDownloadFlyer}
-                  className="px-2.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all"
-                  title="Download Image"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* METHOD 2: MULTI-PHOTO BATCH SHARE */}
-            <div className="p-3 rounded-2xl bg-white/5 border border-purple-500/30 space-y-2 flex flex-col justify-between">
-              <div>
-                <div className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                  <Images className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Queue All Photos in Status</span>
-                </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">
-                  Pushes all product photos to WhatsApp Status simultaneously.
-                </p>
-              </div>
-
+              <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                Automated Social Media & WhatsApp Broadcast Studios are available on the Chinux Pro plan.
+              </p>
               <button
                 type="button"
-                disabled={isSharingBatch || selectedProducts.length === 0}
-                onClick={handleShareAllPhotosBatch}
-                className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new CustomEvent('chinux-open-subscription'));
+                }}
+                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition-all"
               >
-                <Camera className="w-3.5 h-3.5" />
-                <span>{isSharingBatch ? 'Preparing...' : 'Queue All Photos in WhatsApp'}</span>
+                Go Premium (₦3,500/mo) to Unlock
               </button>
             </div>
-          </div>
-        </div>
+          )}
+
+          {/* Apprentice Restriction Warning if Oga turned it off */}
+          {isApprentice && !apprenticeAllowed && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-red-500 shrink-0" />
+              <span>Oga has restricted apprentices from broadcasting stock. Ask Oga for permission in Settings.</span>
+            </div>
+          )}
+
+          {/* CHANNEL SPECIFIC HEADER & TOOLS */}
+          {socialChannel === 'facebook' && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-black text-xs text-blue-900 dark:text-blue-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-600" />
+                  Post to Facebook Marketplace & Feed
+                </span>
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">1-Tap Sharing</span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                Share your wholesale items and storefront directly to Facebook. Buyers click the post to view your live carton prices and order via WhatsApp.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleShareToFacebook(currentProduct)}
+                  className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share Current Product</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShareToFacebook(null)}
+                  className="py-2.5 px-3 bg-white dark:bg-navy-900 border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 hover:bg-blue-50"
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Share Full Storefront</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {socialChannel === 'instagram' && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-amber-500/10 border border-pink-300/40 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-black text-xs text-pink-700 dark:text-pink-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-pink-500" />
+                  Instagram Stories & Feed Post
+                </span>
+                <span className="text-[10px] text-pink-600 font-bold">Bio Link + Hashtags</span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                Copies optimized wholesale captions with Alaba/Onitsha hashtags and opens Instagram so you can post stories or reels with your link in bio.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleShareToInstagram(currentProduct)}
+                  className="py-2.5 px-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedIndex === 777 ? 'Caption Copied! Opening...' : 'Copy Caption & Open IG'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShareToInstagram(null)}
+                  className="py-2.5 px-3 bg-white dark:bg-navy-900 border border-pink-300 dark:border-pink-800 text-pink-700 dark:text-pink-300 font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5 hover:bg-pink-50"
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Storefront Bio Link Caption</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {socialChannel === 'tiktok' && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 text-white border border-slate-700 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-black text-xs text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                  TikTok Viral Wholesale Scripts
+                </span>
+                <span className="text-[10px] text-slate-400 font-bold">Unboxing & Container Arrivals</span>
+              </div>
+              <p className="text-[11px] text-slate-300">
+                Pre-written hook scripts and sound captions designed for Nigerian wholesale traders filming container arrivals and carton stacks.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleShareToTikTok(currentProduct)}
+                  className="py-2.5 px-3 bg-gradient-to-r from-cyan-600 to-slate-800 hover:from-cyan-500 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95 border border-cyan-500/30"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
+                  <span>{copiedIndex === 888 ? 'Script Copied! Opening TikTok...' : 'Copy Script & Open TikTok'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShareToTikTok(null)}
+                  className="py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  <span>Full Shop Pitch Hook</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {socialChannel === 'sms' && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="font-black text-xs text-amber-800 dark:text-amber-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-amber-600" />
+                  Direct SMS Broadcast (No Data Needed)
+                </span>
+                <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold">Offline Buyers</span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                Send plain text price dispatch via phone SMS to buyers across remote motor parks with spotty data.
+              </p>
+              <button
+                type="button"
+                onClick={() => handleShareToSMS(activeText)}
+                className="w-full py-2.5 px-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Open SMS App with Current Products</span>
+              </button>
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* ⚡ 1-CLICK ALL-PRODUCTS DISPATCH TO WHATSAPP STATUS             */}
+          {/* ============================================================== */}
+          {socialChannel === 'whatsapp' && (
+            <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-br from-emerald-950/90 via-slate-900 to-navy-950 border-2 border-emerald-500/60 text-white space-y-3 shadow-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-1 rounded-lg bg-emerald-500/20 text-emerald-400">
+                    <Flame className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs font-black uppercase tracking-wider text-emerald-300">
+                    Send All Products at Once (No Line Limits)
+                  </span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
+                  {selectedProducts.length} Items Selected
+                </span>
+              </div>
+
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                WhatsApp text status has a 10-line limit. Use these 1-click tools to send your complete inventory at once without getting blocked:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                {/* METHOD 1: ALL-IN-ONE GRAPHIC CATALOG FLYER */}
+                <div className="p-3 rounded-2xl bg-white/5 border border-emerald-500/30 space-y-2 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs font-extrabold text-white flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>1-Click Catalog Price Flyer</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Auto-generates a single visual price poster of all selected goods.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-1.5 pt-1">
+                    <button
+                      type="button"
+                      disabled={isGeneratingFlyer || selectedProducts.length === 0}
+                      onClick={handleShareFlyerStatus}
+                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>{isGeneratingFlyer ? 'Creating...' : 'Upload Flyer to Status'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isGeneratingFlyer || selectedProducts.length === 0}
+                      onClick={handleDownloadFlyer}
+                      className="px-2.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all"
+                      title="Download Image"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* METHOD 2: MULTI-PHOTO BATCH SHARE */}
+                <div className="p-3 rounded-2xl bg-white/5 border border-purple-500/30 space-y-2 flex flex-col justify-between">
+                  <div>
+                    <div className="text-xs font-extrabold text-white flex items-center gap-1.5">
+                      <Images className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Queue All Photos in Status</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Pushes all product photos to WhatsApp Status simultaneously.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isSharingBatch || selectedProducts.length === 0}
+                    onClick={handleShareAllPhotosBatch}
+                    className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs rounded-xl shadow transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>{isSharingBatch ? 'Preparing...' : 'Queue All Photos in WhatsApp'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* ⚙️ MERCHANT PREFERENCES: Optional Price Display */}
         <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-navy-950/70 border border-slate-200 dark:border-slate-800">
@@ -1009,5 +1281,6 @@ ${items}
         </div>
       </div>
     </div>
+  </div>
   );
 }

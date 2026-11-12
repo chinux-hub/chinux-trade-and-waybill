@@ -70,8 +70,8 @@ export default function SuperAdminPage() {
     e.preventDefault();
     if (isLockedOut) return;
 
-    // Master Passkeys accepted: founder passkey 'chinux2026' or 'chinux-founder-2026'
-    const validKeys = ['chinux2026', 'chinux-founder-2026', 'admin1234'];
+    // Master Passkeys accepted: secure founder passkey 'chinux2026' or 'chinux-founder-2026'
+    const validKeys = ['chinux2026', 'chinux-founder-2026'];
     if (validKeys.includes(passkeyInput.trim())) {
       setIsAuthenticated(true);
       setAuthError('');

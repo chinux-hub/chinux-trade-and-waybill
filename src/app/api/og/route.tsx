@@ -6,10 +6,10 @@ export const runtime = 'edge';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const title = searchParams.get('title') || 'Wholesale Product';
-    const price = searchParams.get('price') || '';
-    const category = searchParams.get('category') || 'Wholesale Inventory';
-    const businessName = searchParams.get('shop') || 'Verified Wholesale Trader';
+    const title = (searchParams.get('title') || 'Wholesale Product').slice(0, 100);
+    const price = (searchParams.get('price') || '').slice(0, 50);
+    const category = (searchParams.get('category') || 'Wholesale Inventory').slice(0, 50);
+    const businessName = (searchParams.get('shop') || 'Verified Wholesale Trader').slice(0, 100);
 
     return new ImageResponse(
       (

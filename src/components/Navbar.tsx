@@ -142,13 +142,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Search Bar (Both Desktop & Tablet) */}
           <button
             onClick={onOpenSearch}
-            className="flex-1 max-w-sm hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-900/60 text-slate-400 dark:text-slate-500 hover:border-emerald-500/50 hover:bg-white dark:hover:bg-navy-900 transition-all text-sm"
+            className="flex-1 max-w-sm hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-900/60 text-slate-400 dark:text-slate-500 hover:border-emerald-500/50 hover:bg-white dark:hover:bg-navy-900 transition-all text-xs font-medium"
           >
             <Search className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="flex-1 text-left text-xs">Search Waybill, Customer, Phone...</span>
-            <kbd className="text-[10px] bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-mono text-slate-500">
-              Ctrl K
-            </kbd>
+            <span className="flex-1 text-left">Search Waybill, Customer, Phone...</span>
           </button>
 
           {/* Right Actions Bar: Clean, Focused & Modular */}

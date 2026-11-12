@@ -7,8 +7,13 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get('x-paystack-signature');
     const secret = process.env.PAYSTACK_SECRET_KEY || '';
 
-    // If secret key is set, verify HMAC SHA512 signature
-    if (secret && signature) {
+    // Strict Security Verification: require signature if secret is configured
+    if (secret) {
+      if (!signature) {
+        console.warn('[Paystack Webhook] Missing x-paystack-signature header rejected');
+        return NextResponse.json({ status: 'error', message: 'Missing webhook signature' }, { status: 401 });
+      }
+
       const hash = crypto.createHmac('sha512', secret).update(rawBody).digest('hex');
       if (hash !== signature) {
         console.warn('[Paystack Webhook] Invalid signature rejected');

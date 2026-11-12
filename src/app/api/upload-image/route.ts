@@ -32,10 +32,22 @@ export async function POST(req: NextRequest) {
         buffer = Buffer.from(base64, 'base64');
       }
 
+      // Security check: limit upload size to 10MB
+      if (buffer.length > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Image exceeds maximum size of 10MB' }, { status: 413 });
+      }
+
+      // Security check: strictly allow safe image mime types
+      const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      if (!allowedMimes.includes(mimeType.toLowerCase())) {
+        return NextResponse.json({ error: 'Unsupported file type. Allowed: JPG, PNG, WEBP, GIF' }, { status: 400 });
+      }
+
       const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
-      const cleanName = filename
-        ? `${filename.replace(/[^a-zA-Z0-9_-]/g, '_')}_${Date.now()}.${ext}`
-        : `prod_${Date.now()}.${ext}`;
+      const cleanSafeFilename = (filename || 'product')
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .slice(0, 40);
+      const cleanName = `prod_${cleanSafeFilename}_${Date.now()}.${ext}`;
 
       const { data, error } = await supabaseAdmin.storage
         .from('product-photos')
@@ -65,9 +77,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file found in request' }, { status: 400 });
     }
 
+    // Security check: limit upload size to 10MB
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Image exceeds maximum size of 10MB' }, { status: 413 });
+    }
+
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const fileType = file.type || 'image/jpeg';
+    if (!allowedMimes.includes(fileType.toLowerCase())) {
+      return NextResponse.json({ error: 'Unsupported file type. Allowed: JPG, PNG, WEBP, GIF' }, { status: 400 });
+    }
+
     const buffer = Buffer.from(await file.arrayBuffer());
-    const ext = file.type.includes('png') ? 'png' : file.type.includes('webp') ? 'webp' : 'jpg';
-    const cleanName = `prod_${Date.now()}_${Math.floor(Math.random() * 1000)}.${ext}`;
+    const ext = fileType.includes('png') ? 'png' : fileType.includes('webp') ? 'webp' : 'jpg';
+    const cleanName = `prod_${Date.now()}_${Math.floor(Math.random() * 10000)}.${ext}`;
 
     const { data, error } = await supabaseAdmin.storage
       .from('product-photos')

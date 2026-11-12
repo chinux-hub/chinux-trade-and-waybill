@@ -315,7 +315,17 @@ class StorageManager {
         });
 
         if (error) {
-          return { error: error.message };
+          const isNetworkError =
+            error.message.toLowerCase().includes('fetch') ||
+            error.message.toLowerCase().includes('network') ||
+            error.message.toLowerCase().includes('connection') ||
+            error.message.toLowerCase().includes('address') ||
+            error.message.toLowerCase().includes('timeout');
+
+          if (!isNetworkError) {
+            return { error: error.message };
+          }
+          console.warn('Supabase cloud service is offline or paused. Proceeding with offline-first local login:', error.message);
         }
 
         if (data.user) {
@@ -403,7 +413,17 @@ class StorageManager {
         });
 
         if (error) {
-          return { error: error.message };
+          const isNetworkError =
+            error.message.toLowerCase().includes('fetch') ||
+            error.message.toLowerCase().includes('network') ||
+            error.message.toLowerCase().includes('connection') ||
+            error.message.toLowerCase().includes('address') ||
+            error.message.toLowerCase().includes('timeout');
+
+          if (!isNetworkError) {
+            return { error: error.message };
+          }
+          console.warn('Supabase cloud service is offline or paused. Proceeding with offline-first local login:', error.message);
         }
 
         if (data.user) {

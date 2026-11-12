@@ -89,8 +89,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({ isOpen, onClose }) => {
               <X className="w-4 h-4" />
             </button>
           )}
-          <button onClick={onClose} className="ml-2 text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-slate-500">
-            ESC
+          <button
+            onClick={onClose}
+            className="ml-2 p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
+            title="Close Search"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 

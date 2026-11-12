@@ -37,6 +37,12 @@ import { createWhatsAppLink } from '@/lib/whatsapp';
 export default function CustomerStorefrontContent() {
   const searchParams = useSearchParams();
   const highlightProductId = searchParams.get('product') || searchParams.get('id');
+  const paramTitle = searchParams.get('title');
+  const paramPrice = searchParams.get('price');
+  const paramImg = searchParams.get('img');
+  const paramShop = searchParams.get('shop');
+  const paramPhone = searchParams.get('phone');
+  const paramCat = searchParams.get('cat');
 
   const [profile, setProfile] = useState<TraderProfile>(storage.getProfile());
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
@@ -47,6 +53,10 @@ export default function CustomerStorefrontContent() {
   const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
   const [copiedStorefront, setCopiedStorefront] = useState(false);
 
+  // Dynamic Merchant Details from URL or Storage
+  const activeBusinessName = paramShop || profile.businessName || 'Verified Wholesale Importer';
+  const activePhone = paramPhone || profile.phone || '';
+
   // Waybill Tracker State for Customers
   const [trackingCode, setTrackingCode] = useState('');
   const [trackedWaybill, setTrackedWaybill] = useState<Waybill | null>(null);
@@ -55,7 +65,8 @@ export default function CustomerStorefrontContent() {
   useEffect(() => {
     const prof = storage.getProfile();
     setProfile(prof);
-    setCatalog(storage.getCatalog());
+    const existing = storage.getCatalog();
+    setCatalog(existing);
 
     const savedView = localStorage.getItem('chinux_store_view_mode') as StorefrontViewMode;
     if (savedView) setViewMode(savedView);
@@ -83,15 +94,37 @@ export default function CustomerStorefrontContent() {
   };
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';
-  const storefrontUrl = `${origin}/store`;
+  const storefrontUrl = `${origin}/store${paramShop || paramPhone ? `?${new URLSearchParams({ ...(paramShop ? { shop: paramShop } : {}), ...(paramPhone ? { phone: paramPhone } : {}) }).toString()}` : ''}`;
 
-  const featuredProduct = highlightProductId
+  // Find or synthesize the featured product from URL params
+  let featuredProduct: CatalogProduct | null = highlightProductId
     ? catalog.find(
         (p) =>
           p.id === highlightProductId ||
           p.name.toLowerCase().includes(highlightProductId.toLowerCase())
-      )
+      ) || null
     : null;
+
+  if (!featuredProduct && (paramTitle || highlightProductId)) {
+    const parsedPrice = paramPrice ? parseInt(paramPrice.replace(/\D/g, '') || '0', 10) : 0;
+    featuredProduct = {
+      id: highlightProductId || 'item_' + Date.now(),
+      name: paramTitle || highlightProductId || 'Wholesale Stock Item',
+      wholesalePrice: parsedPrice,
+      retailPrice: parsedPrice ? Math.round(parsedPrice * 1.15) : 0,
+      category: paramCat || 'Wholesale Stock',
+      stockCount: 1,
+      isAvailable: true,
+      imageUrl: paramImg || '',
+      restockSubscribers: [],
+    };
+  }
+
+  // Ensure customer always sees catalog items
+  const baseCatalog = catalog.length > 0 ? catalog : (featuredProduct ? [featuredProduct] : []);
+  const allAvailableProducts = featuredProduct && !baseCatalog.some((p) => p.id === featuredProduct!.id)
+    ? [featuredProduct, ...baseCatalog]
+    : baseCatalog;
 
   const categories = [
     'All',
@@ -102,7 +135,7 @@ export default function CustomerStorefrontContent() {
     'Electronics & Appliances',
   ];
 
-  const filteredProducts = catalog.filter((p) => {
+  const filteredProducts = allAvailableProducts.filter((p) => {
     const matchesCat = activeCategory === 'All' || p.category === activeCategory;
     const matchesSearch =
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,15 +144,36 @@ export default function CustomerStorefrontContent() {
   });
 
   const handleOrderViaWhatsApp = (prod: CatalogProduct) => {
-    const productUrl = `${origin}/store?product=${prod.id}`;
-    const message = `Hello *${profile?.businessName || 'Wholesale Store'}*,\nI am viewing your wholesale catalog on Chinux (${productUrl}).\n\n📦 *I want to order:*\n- *Item:* ${prod.name}\n- *Category:* ${prod.category}\n- *Wholesale Price:* ${formatNaira(prod.wholesalePrice)} / carton\n- *Stock Available:* ${prod.stockCount} cartons\n\nPlease confirm carton availability, payment account, and waybill dispatch schedule to my city.`;
+    const productParams = new URLSearchParams();
+    productParams.set('product', prod.id);
+    productParams.set('title', prod.name);
+    productParams.set('price', formatNaira(prod.wholesalePrice));
+    if (prod.imageUrl && prod.imageUrl.startsWith('http')) {
+      productParams.set('img', prod.imageUrl);
+    }
+    if (activeBusinessName) productParams.set('shop', activeBusinessName);
+    if (activePhone) productParams.set('phone', activePhone);
 
-    const url = createWhatsAppLink(profile?.phone || '', message);
+    const productUrl = `${origin}/store?${productParams.toString()}`;
+    const message = `Hello *${activeBusinessName}*,\nI am viewing your wholesale catalog on Chinux (${productUrl}).\n\n📦 *I want to order:*\n- *Item:* ${prod.name}\n- *Category:* ${prod.category}\n- *Wholesale Price:* ${formatNaira(prod.wholesalePrice)} / carton\n- *Stock Available:* ${prod.stockCount} cartons\n\nPlease confirm carton availability, payment account, and waybill dispatch schedule to my city.`;
+
+    const targetPhone = activePhone || profile.phone || '';
+    const url = createWhatsAppLink(targetPhone, message);
     window.open(url, '_blank');
   };
 
   const handleCopyProductLink = (prod: CatalogProduct) => {
-    const url = `${origin}/store?product=${prod.id}`;
+    const productParams = new URLSearchParams();
+    productParams.set('product', prod.id);
+    productParams.set('title', prod.name);
+    productParams.set('price', formatNaira(prod.wholesalePrice));
+    if (prod.imageUrl && prod.imageUrl.startsWith('http')) {
+      productParams.set('img', prod.imageUrl);
+    }
+    if (activeBusinessName) productParams.set('shop', activeBusinessName);
+    if (activePhone) productParams.set('phone', activePhone);
+
+    const url = `${origin}/store?${productParams.toString()}`;
     navigator.clipboard.writeText(url);
     setCopiedProductId(prod.id);
     setTimeout(() => setCopiedProductId(null), 2500);
@@ -339,12 +393,12 @@ export default function CustomerStorefrontContent() {
                   ? 'bg-emerald-100 border border-emerald-200 text-emerald-800'
                   : 'bg-emerald-950/60 border border-emerald-800 text-emerald-300'
               }`}>
-                {profile.businessName?.charAt(0) || 'C'}
+                {activeBusinessName.charAt(0) || 'C'}
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className={`text-lg sm:text-xl font-black ${themeClasses.titleText}`}>
-                    {profile.businessName || 'Verified Wholesale Importer'}
+                    {activeBusinessName}
                   </h1>
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
                     <ShieldCheck className="w-3 h-3" />
@@ -359,9 +413,9 @@ export default function CustomerStorefrontContent() {
             </div>
 
             <div className="flex items-center gap-2">
-              {profile.phone && (
+              {activePhone && (
                 <a
-                  href={`tel:${profile.phone}`}
+                  href={`tel:${activePhone}`}
                   className={`px-4 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all ${
                     isLight
                       ? 'border-slate-200 hover:bg-slate-50 text-slate-700'
@@ -373,7 +427,7 @@ export default function CustomerStorefrontContent() {
                 </a>
               )}
               <a
-                href={createWhatsAppLink(profile?.phone || '', `Hello *${profile?.businessName || 'Store'}*, I am viewing your Chinux online catalog and would like to make an inquiry.`)}
+                href={createWhatsAppLink(activePhone, `Hello *${activeBusinessName}*, I am viewing your Chinux online catalog and would like to make an inquiry.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 active:scale-95"
@@ -843,10 +897,10 @@ export default function CustomerStorefrontContent() {
               Official Digital Wholesale Storefront
             </span>
             <h2 className="text-xl sm:text-2xl font-black">
-              {profile.businessName || 'Wholesale Importer & Distributor'}
+              {activeBusinessName}
             </h2>
             <p className="text-xs text-slate-300 max-w-md mx-auto">
-              You have viewed all {catalog.length} available inventory items in store. Bookmark this link to check daily arrivals and new container dispatches.
+              You have viewed all {allAvailableProducts.length} available inventory items in store. Bookmark this link to check daily arrivals and new container dispatches.
             </p>
           </div>
 
@@ -867,7 +921,7 @@ export default function CustomerStorefrontContent() {
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
             <a
-              href={createWhatsAppLink(profile?.phone || '', `Hello *${profile?.businessName || 'Store'}*, I viewed your Chinux wholesale catalog (${storefrontUrl}) and want to discuss a bulk purchase.`)}
+              href={createWhatsAppLink(activePhone || profile.phone || '', `Hello *${activeBusinessName}*, I viewed your Chinux wholesale catalog (${storefrontUrl}) and want to discuss a bulk purchase.`)}
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center gap-1.5 active:scale-95"
@@ -876,13 +930,13 @@ export default function CustomerStorefrontContent() {
               <span>Contact Store on WhatsApp</span>
             </a>
 
-            {profile.phone && (
+            {activePhone && (
               <a
-                href={`tel:${profile.phone}`}
+                href={`tel:${activePhone}`}
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>Call {profile.phone}</span>
+                <span>Call {activePhone}</span>
               </a>
             )}
           </div>

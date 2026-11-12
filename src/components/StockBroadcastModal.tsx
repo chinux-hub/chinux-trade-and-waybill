@@ -33,6 +33,114 @@ import { storage } from '@/lib/storage';
 import { formatNaira } from '@/lib/formatters';
 import { createSmsLink } from '@/lib/whatsapp';
 
+export type FlyerTheme = 'emerald' | 'royal_blue' | 'crimson_gold' | 'modern_gold' | 'clean_white';
+
+export interface FlyerThemeConfig {
+  name: string;
+  badge: string;
+  bgGrad: [string, string, string];
+  accent: string;
+  accentText: string;
+  priceColor: string;
+  cardBg: string;
+  cardBorder: string;
+  titleColor: string;
+  subtextColor: string;
+  bannerBg: string;
+  bannerText: string;
+  footerBg: string;
+  footerText: string;
+  footerSubText: string;
+}
+
+export const FLYER_THEMES: Record<FlyerTheme, FlyerThemeConfig> = {
+  emerald: {
+    name: 'Emerald Luxury (Default)',
+    badge: '🌿 Green & Gold',
+    bgGrad: ['#061325', '#0a1d37', '#020b18'],
+    accent: '#10b981',
+    accentText: '#10b981',
+    priceColor: '#34d399',
+    cardBg: 'rgba(255, 255, 255, 0.05)',
+    cardBorder: 'rgba(16, 185, 129, 0.3)',
+    titleColor: '#ffffff',
+    subtextColor: '#94a3b8',
+    bannerBg: '#10b981',
+    bannerText: '#ffffff',
+    footerBg: '#10b981',
+    footerText: '#061325',
+    footerSubText: '#022c22',
+  },
+  royal_blue: {
+    name: 'Corporate Royal Blue',
+    badge: '🔵 Royal Marine',
+    bgGrad: ['#051126', '#0b1e42', '#030a17'],
+    accent: '#3b82f6',
+    accentText: '#60a5fa',
+    priceColor: '#60a5fa',
+    cardBg: 'rgba(255, 255, 255, 0.06)',
+    cardBorder: 'rgba(59, 130, 246, 0.35)',
+    titleColor: '#ffffff',
+    subtextColor: '#93c5fd',
+    bannerBg: '#2563eb',
+    bannerText: '#ffffff',
+    footerBg: '#2563eb',
+    footerText: '#ffffff',
+    footerSubText: '#dbeafe',
+  },
+  crimson_gold: {
+    name: 'Flash Sale Crimson & Gold',
+    badge: '🔴 Flash Sale',
+    bgGrad: ['#1f040b', '#3b0816', '#140207'],
+    accent: '#f59e0b',
+    accentText: '#fbbf24',
+    priceColor: '#facc15',
+    cardBg: 'rgba(255, 255, 255, 0.06)',
+    cardBorder: 'rgba(245, 158, 11, 0.35)',
+    titleColor: '#ffffff',
+    subtextColor: '#fca5a5',
+    bannerBg: '#e11d48',
+    bannerText: '#ffffff',
+    footerBg: '#f59e0b',
+    footerText: '#1c1917',
+    footerSubText: '#451a03',
+  },
+  modern_gold: {
+    name: 'Onyx & Champagne Gold',
+    badge: '🟡 Onyx Gold',
+    bgGrad: ['#0f0f0f', '#1c1917', '#0a0a0a'],
+    accent: '#d97706',
+    accentText: '#fbbf24',
+    priceColor: '#fef08a',
+    cardBg: 'rgba(255, 255, 255, 0.05)',
+    cardBorder: 'rgba(217, 119, 6, 0.4)',
+    titleColor: '#ffffff',
+    subtextColor: '#a8a29e',
+    bannerBg: '#b45309',
+    bannerText: '#ffffff',
+    footerBg: '#d97706',
+    footerText: '#000000',
+    footerSubText: '#451a03',
+  },
+  clean_white: {
+    name: 'Clean White High-Contrast',
+    badge: '⚪ Crisp White',
+    bgGrad: ['#f8fafc', '#f1f5f9', '#e2e8f0'],
+    accent: '#059669',
+    accentText: '#059669',
+    priceColor: '#047857',
+    cardBg: '#ffffff',
+    cardBorder: 'rgba(15, 23, 42, 0.15)',
+    titleColor: '#0f172a',
+    subtextColor: '#64748b',
+    bannerBg: '#059669',
+    bannerText: '#ffffff',
+    footerBg: '#0f172a',
+    footerText: '#ffffff',
+    footerSubText: '#94a3b8',
+  },
+};
+
 interface StockBroadcastModalProps {
   product?: CatalogProduct | null;
   isOpen: boolean;
@@ -53,6 +161,13 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
   const [isGeneratingFlyer, setIsGeneratingFlyer] = useState(false);
   const [isSharingBatch, setIsSharingBatch] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // 🎨 Flyer Design Customization States
+  const [flyerTheme, setFlyerTheme] = useState<FlyerTheme>('emerald');
+  const [flyerHeadline, setFlyerHeadline] = useState("TODAY'S WHOLESALE ARRIVALS & PRICES");
+  const [flyerSubHeader, setFlyerSubHeader] = useState('CHINUX VERIFIED WHOLESALE CATALOG');
+  const [isCustomizingFlyer, setIsCustomizingFlyer] = useState(false);
+  const [flyerPreviewUrl, setFlyerPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -223,45 +338,48 @@ ${items}
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
+    const t = FLYER_THEMES[flyerTheme] || FLYER_THEMES.emerald;
+
     // Background gradient
     const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, '#061325');
-    grad.addColorStop(0.5, '#0a1d37');
-    grad.addColorStop(1, '#020b18');
+    grad.addColorStop(0, t.bgGrad[0]);
+    grad.addColorStop(0.5, t.bgGrad[1]);
+    grad.addColorStop(1, t.bgGrad[2]);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
 
     // Decorative glow top right
     const glow = ctx.createRadialGradient(900, 150, 20, 900, 150, 400);
-    glow.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
-    glow.addColorStop(1, 'rgba(16, 185, 129, 0)');
+    glow.addColorStop(0, t.accent + '40');
+    glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, width, 500);
 
     // HEADER SECTION
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = t.accentText;
     ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('⚡ CHINUX VERIFIED WHOLESALE CATALOG', 60, 90);
+    ctx.fillText(`⚡ ${(flyerSubHeader || 'CHINUX VERIFIED WHOLESALE CATALOG').toUpperCase()}`, 60, 90);
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = t.titleColor;
     ctx.font = '900 64px sans-serif';
     const bizName = (profile.businessName || 'WHOLESALE DISTRIBUTOR').toUpperCase();
     ctx.fillText(bizName, 60, 170);
 
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = t.subtextColor;
     ctx.font = '500 28px sans-serif';
     ctx.fillText(`📍 ${profile.marketLocation || 'Onitsha & Lagos Wholesale Hubs'}`, 60, 220);
 
     // Sub-banner
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = t.bannerBg;
     ctx.beginPath();
     ctx.roundRect(60, 255, 960, 60, 16);
     ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = t.bannerText;
     ctx.font = 'bold 28px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`📢 TODAY'S WHOLESALE ARRIVALS & PRICES (${selectedProducts.length} ITEMS)`, width / 2, 296);
+    const headline = flyerHeadline.trim() || "TODAY'S WHOLESALE ARRIVALS & PRICES";
+    ctx.fillText(`📢 ${headline.toUpperCase()} (${selectedProducts.length} ITEMS)`, width / 2, 296);
     ctx.textAlign = 'left';
 
     // PRODUCTS GRID
@@ -278,8 +396,8 @@ ${items}
       const y = startY + row * itemHeight;
 
       // Card Box
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)';
+      ctx.fillStyle = t.cardBg;
+      ctx.strokeStyle = t.cardBorder;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.roundRect(x, y, colWidth, itemHeight - 30, 24);
@@ -291,7 +409,7 @@ ${items}
       const imgX = x + 20;
       const imgY = y + 20;
 
-      ctx.fillStyle = '#1e293b';
+      ctx.fillStyle = flyerTheme === 'clean_white' ? '#f1f5f9' : '#1e293b';
       ctx.beginPath();
       ctx.roundRect(imgX, imgY, imgSize, imgSize, 16);
       ctx.fill();
@@ -317,7 +435,7 @@ ${items}
       }
 
       // Title
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = t.titleColor;
       ctx.font = 'bold 30px sans-serif';
       const maxTitleWidth = colWidth - imgSize - 50;
       let title = p.name;
@@ -330,17 +448,17 @@ ${items}
       ctx.fillText(title, x + imgSize + 40, y + 60);
 
       // Category
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = t.subtextColor;
       ctx.font = '22px sans-serif';
       ctx.fillText(p.category, x + imgSize + 40, y + 95);
 
       // Price
       if (includePrice) {
-        ctx.fillStyle = '#34d399';
+        ctx.fillStyle = t.priceColor;
         ctx.font = '900 36px sans-serif';
         ctx.fillText(formatNaira(p.wholesalePrice), x + imgSize + 40, y + 145);
       } else {
-        ctx.fillStyle = '#38bdf8';
+        ctx.fillStyle = t.accent;
         ctx.font = 'bold 24px sans-serif';
         ctx.fillText('DM for Wholesale Rate', x + imgSize + 40, y + 145);
       }
@@ -365,17 +483,17 @@ ${items}
     const footY = height - footerHeight + 20;
 
     // Order CTA Banner
-    ctx.fillStyle = '#10b981';
+    ctx.fillStyle = t.footerBg;
     ctx.beginPath();
     ctx.roundRect(60, footY, 960, 110, 24);
     ctx.fill();
 
-    ctx.fillStyle = '#061325';
+    ctx.fillStyle = t.footerText;
     ctx.font = '900 34px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('👉 ORDER & TRACK ONLINE: ' + storefrontUrl.replace(/^https?:\/\//, ''), width / 2, footY + 50);
 
-    ctx.fillStyle = '#022c22';
+    ctx.fillStyle = t.footerSubText;
     ctx.font = 'bold 26px sans-serif';
     ctx.fillText(`📞 CALL/WHATSAPP: ${profile.phone} • NATIONWIDE MOTOR PARK WAYBILL`, width / 2, footY + 90);
     ctx.textAlign = 'left';
@@ -383,6 +501,22 @@ ${items}
     return new Promise((resolve) => {
       canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92);
     });
+  };
+
+  // Live Flyer Preview Generator
+  const handlePreviewFlyer = async () => {
+    setIsGeneratingFlyer(true);
+    try {
+      const blob = await generateCatalogFlyerBlob();
+      if (blob) {
+        if (flyerPreviewUrl) URL.revokeObjectURL(flyerPreviewUrl);
+        const url = URL.createObjectURL(blob);
+        setFlyerPreviewUrl(url);
+      }
+    } catch (err) {
+      console.log('handlePreviewFlyer error:', err);
+    }
+    setIsGeneratingFlyer(false);
   };
 
   // 1-Click Upload Catalog Flyer to WhatsApp Status
@@ -904,11 +1038,21 @@ Shop: ${profile.businessName}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                 {/* METHOD 1: ALL-IN-ONE GRAPHIC CATALOG FLYER */}
-                <div className="p-3 rounded-2xl bg-white/5 border border-emerald-500/30 space-y-2 flex flex-col justify-between">
+                <div className="p-3 rounded-2xl bg-white/5 border border-emerald-500/30 space-y-2.5 flex flex-col justify-between">
                   <div>
-                    <div className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>1-Click Catalog Price Flyer</span>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-extrabold text-white flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>1-Click Catalog Price Flyer</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsCustomizingFlyer(!isCustomizingFlyer)}
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 transition-colors flex items-center gap-1 border border-emerald-500/30"
+                      >
+                        <span>🎨 Design</span>
+                        <span>{isCustomizingFlyer ? '▲' : '▼'}</span>
+                      </button>
                     </div>
                     <p className="text-[10px] text-slate-400 mt-0.5">
                       Auto-generates a single visual price poster of all selected goods.
@@ -924,6 +1068,15 @@ Shop: ${profile.businessName}
                     >
                       <Smartphone className="w-3.5 h-3.5" />
                       <span>{isGeneratingFlyer ? 'Creating...' : 'Upload Flyer to Status'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isGeneratingFlyer || selectedProducts.length === 0}
+                      onClick={handlePreviewFlyer}
+                      className="px-2.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all"
+                      title="Live Preview Flyer"
+                    >
+                      <span>👁️</span>
                     </button>
                     <button
                       type="button"
@@ -960,6 +1113,151 @@ Shop: ${profile.businessName}
                   </button>
                 </div>
               </div>
+
+              {/* 🎨 CUSTOMIZE FLYER DESIGN ACCORDION */}
+              {isCustomizingFlyer && (
+                <div className="p-3.5 rounded-2xl bg-black/40 border border-emerald-500/30 space-y-3 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                      <span>🎨</span>
+                      <span>Flyer Design & Branding Settings</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomizingFlyer(false)}
+                      className="text-[10px] text-slate-400 hover:text-white"
+                    >
+                      Close ✕
+                    </button>
+                  </div>
+
+                  {/* 1. Theme Selection Chips */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-300 block">
+                      Color Palette & Style:
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      {(Object.keys(FLYER_THEMES) as FlyerTheme[]).map((themeKey) => {
+                        const t = FLYER_THEMES[themeKey];
+                        const isSelected = flyerTheme === themeKey;
+                        return (
+                          <button
+                            key={themeKey}
+                            type="button"
+                            onClick={() => {
+                              setFlyerTheme(themeKey);
+                              if (flyerPreviewUrl) handlePreviewFlyer();
+                            }}
+                            className={`p-2 rounded-xl text-left border transition-all ${
+                              isSelected
+                                ? 'bg-emerald-600/30 border-emerald-400 text-white ring-1 ring-emerald-400/50'
+                                : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                            }`}
+                          >
+                            <div className="text-[11px] font-bold truncate">{t.badge}</div>
+                            <div className="text-[9px] text-slate-400 truncate">{t.name.split(' ')[0]}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. Headline Preset & Custom Input */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-300 block">
+                      Flyer Banner Headline:
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        "TODAY'S WHOLESALE ARRIVALS",
+                        "NEW CONTAINER DISPATCH",
+                        "FLASH CLEARANCE SALE",
+                        "WEEKLY PRICE GUIDE",
+                      ].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setFlyerHeadline(preset)}
+                          className={`px-2 py-0.5 rounded-lg text-[9px] font-bold transition-all ${
+                            flyerHeadline === preset
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                          }`}
+                        >
+                          {preset.split(' ')[0]}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={flyerHeadline}
+                      onChange={(e) => setFlyerHeadline(e.target.value)}
+                      placeholder="e.g. TODAY'S WHOLESALE ARRIVALS & PRICES"
+                      className="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+
+                  {/* 3. Top Subheader / Market Tag */}
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-300 block">
+                      Top Badge Tag:
+                    </span>
+                    <input
+                      type="text"
+                      value={flyerSubHeader}
+                      onChange={(e) => setFlyerSubHeader(e.target.value)}
+                      placeholder="e.g. CHINUX VERIFIED WHOLESALE CATALOG"
+                      className="w-full px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 👁️ LIVE FLYER PREVIEW CARD */}
+              {flyerPreviewUrl && (
+                <div className="p-3.5 rounded-2xl bg-black/60 border border-emerald-500/40 space-y-2.5 animate-fadeIn">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                      <span>👁️ Live Flyer Preview</span>
+                      <span className="text-[10px] text-slate-400">({FLYER_THEMES[flyerTheme].name})</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFlyerPreviewUrl(null)}
+                      className="text-xs text-slate-400 hover:text-white"
+                    >
+                      Close Preview ✕
+                    </button>
+                  </div>
+
+                  <div className="max-h-72 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-1 flex justify-center">
+                    <img
+                      src={flyerPreviewUrl}
+                      alt="WhatsApp Status Catalog Flyer Preview"
+                      className="w-full max-w-sm rounded-lg object-contain shadow-2xl"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleShareFlyerStatus}
+                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow flex items-center justify-center gap-1.5 active:scale-95"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>Post This Flyer to WhatsApp Status</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDownloadFlyer}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl flex items-center gap-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

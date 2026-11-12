@@ -35,16 +35,18 @@ import { formatNaira } from '@/lib/formatters';
 import { createWhatsAppLink } from '@/lib/whatsapp';
 
 export default function CustomerStorefrontContent() {
+  const [isMounted, setIsMounted] = useState(false);
   const searchParams = useSearchParams();
   const highlightProductId = searchParams.get('product') || searchParams.get('id');
   const paramTitle = searchParams.get('title');
   const paramPrice = searchParams.get('price');
   const paramImg = searchParams.get('img');
+  const paramVideo = searchParams.get('video');
   const paramShop = searchParams.get('shop');
   const paramPhone = searchParams.get('phone');
   const paramCat = searchParams.get('cat');
 
-  const [profile, setProfile] = useState<TraderProfile>(storage.getProfile());
+  const [profile, setProfile] = useState<TraderProfile>(() => storage.getProfile());
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
@@ -52,10 +54,11 @@ export default function CustomerStorefrontContent() {
   const [themeOverride, setThemeOverride] = useState<StorefrontTheme | null>(null);
   const [copiedProductId, setCopiedProductId] = useState<string | null>(null);
   const [copiedStorefront, setCopiedStorefront] = useState(false);
+  const [origin, setOrigin] = useState('https://chinux.ng');
 
   // Dynamic Merchant Details from URL or Storage
-  const activeBusinessName = paramShop || profile.businessName || 'Verified Wholesale Importer';
-  const activePhone = paramPhone || profile.phone || '';
+  const activeBusinessName = paramShop || profile?.businessName || 'Verified Wholesale Importer';
+  const activePhone = paramPhone || profile?.phone || '';
 
   // Waybill Tracker State for Customers
   const [trackingCode, setTrackingCode] = useState('');
@@ -63,45 +66,61 @@ export default function CustomerStorefrontContent() {
   const [trackSearched, setTrackSearched] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+    if (typeof window !== 'undefined') {
+      setOrigin(window.location.origin);
+    }
     const prof = storage.getProfile();
     setProfile(prof);
     const existing = storage.getCatalog();
-    setCatalog(existing);
+    setCatalog(Array.isArray(existing) ? existing : []);
 
-    const savedView = localStorage.getItem('chinux_store_view_mode') as StorefrontViewMode;
-    if (savedView) setViewMode(savedView);
+    try {
+      const savedView = localStorage.getItem('chinux_store_view_mode') as StorefrontViewMode;
+      if (savedView) setViewMode(savedView);
 
-    const savedTheme = localStorage.getItem('chinux_storefront_theme_override') as StorefrontTheme;
-    if (savedTheme) {
-      setThemeOverride(savedTheme);
-    } else if (prof.storefrontTheme) {
-      setThemeOverride(prof.storefrontTheme);
+      const savedTheme = localStorage.getItem('chinux_storefront_theme_override') as StorefrontTheme;
+      if (savedTheme) {
+        setThemeOverride(savedTheme);
+      } else if (prof?.storefrontTheme) {
+        setThemeOverride(prof.storefrontTheme);
+      }
+    } catch (e) {
+      // Ignore localStorage read errors in private browsing
     }
   }, []);
 
-  const activeTheme: StorefrontTheme = themeOverride || profile.storefrontTheme || 'dark';
+  const activeTheme: StorefrontTheme = themeOverride || profile?.storefrontTheme || 'dark';
 
   const handleToggleTheme = () => {
     const nextTheme: StorefrontTheme =
       activeTheme === 'dark' ? 'light' : activeTheme === 'light' ? 'emerald_luxury' : 'dark';
     setThemeOverride(nextTheme);
-    localStorage.setItem('chinux_storefront_theme_override', nextTheme);
+    try {
+      localStorage.setItem('chinux_storefront_theme_override', nextTheme);
+    } catch (e) {}
   };
 
   const handleSetViewMode = (mode: StorefrontViewMode) => {
     setViewMode(mode);
-    localStorage.setItem('chinux_store_view_mode', mode);
+    try {
+      localStorage.setItem('chinux_store_view_mode', mode);
+    } catch (e) {}
   };
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';
-  const storefrontUrl = `${origin}/store${paramShop || paramPhone ? `?${new URLSearchParams({ ...(paramShop ? { shop: paramShop } : {}), ...(paramPhone ? { phone: paramPhone } : {}) }).toString()}` : ''}`;
+  const storefrontParams = new URLSearchParams();
+  if (paramShop) storefrontParams.set('shop', paramShop);
+  if (paramPhone) storefrontParams.set('phone', paramPhone);
+  const storefrontUrl = `${origin}/store${storefrontParams.toString() ? `?${storefrontParams.toString()}` : ''}`;
 
-  // Find or synthesize the featured product from URL params
-  let featuredProduct: CatalogProduct | null = highlightProductId
+  // Find or synthesize the featured product from URL params with full null-safety
+  const hl = (highlightProductId || '').toLowerCase();
+  let featuredProduct: CatalogProduct | null = hl
     ? catalog.find(
         (p) =>
-          p.id === highlightProductId ||
-          p.name.toLowerCase().includes(highlightProductId.toLowerCase())
+          p &&
+          (p.id === highlightProductId ||
+            (typeof p.name === 'string' && p.name.toLowerCase().includes(hl)))
       ) || null
     : null;
 
@@ -116,13 +135,15 @@ export default function CustomerStorefrontContent() {
       stockCount: 1,
       isAvailable: true,
       imageUrl: paramImg || '',
+      videoUrl: paramVideo || '',
+      mediaType: paramVideo ? 'video' : 'image',
       restockSubscribers: [],
     };
   }
 
   // Ensure customer always sees catalog items
   const baseCatalog = catalog.length > 0 ? catalog : (featuredProduct ? [featuredProduct] : []);
-  const allAvailableProducts = featuredProduct && !baseCatalog.some((p) => p.id === featuredProduct!.id)
+  const allAvailableProducts = featuredProduct && !baseCatalog.some((p) => p?.id === featuredProduct!.id)
     ? [featuredProduct, ...baseCatalog]
     : baseCatalog;
 
@@ -136,20 +157,29 @@ export default function CustomerStorefrontContent() {
   ];
 
   const filteredProducts = allAvailableProducts.filter((p) => {
-    const matchesCat = activeCategory === 'All' || p.category === activeCategory;
+    if (!p) return false;
+    const cat = typeof p.category === 'string' ? p.category : '';
+    const name = typeof p.name === 'string' ? p.name : '';
+    const search = searchTerm.toLowerCase().trim();
+
+    const matchesCat = activeCategory === 'All' || cat === activeCategory;
     const matchesSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchTerm.toLowerCase());
+      !search ||
+      name.toLowerCase().includes(search) ||
+      cat.toLowerCase().includes(search);
     return matchesCat && matchesSearch;
   });
 
   const handleOrderViaWhatsApp = (prod: CatalogProduct) => {
     const productParams = new URLSearchParams();
     productParams.set('product', prod.id);
-    productParams.set('title', prod.name);
+    productParams.set('title', prod.name || '');
     productParams.set('price', formatNaira(prod.wholesalePrice));
     if (prod.imageUrl && prod.imageUrl.startsWith('http')) {
       productParams.set('img', prod.imageUrl);
+    }
+    if (prod.videoUrl && prod.videoUrl.startsWith('http')) {
+      productParams.set('video', prod.videoUrl);
     }
     if (activeBusinessName) productParams.set('shop', activeBusinessName);
     if (activePhone) productParams.set('phone', activePhone);
@@ -325,7 +355,14 @@ export default function CustomerStorefrontContent() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
               <div className="relative h-60 sm:h-72 rounded-2xl overflow-hidden bg-slate-800 border border-slate-700">
-                {featuredProduct.imageUrl ? (
+                {featuredProduct.videoUrl || featuredProduct.mediaType === 'video' ? (
+                  <video
+                    src={featuredProduct.videoUrl || featuredProduct.imageUrl}
+                    controls
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : featuredProduct.imageUrl ? (
                   <img
                     src={featuredProduct.imageUrl}
                     alt={featuredProduct.name}
@@ -333,7 +370,7 @@ export default function CustomerStorefrontContent() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-400 text-sm">
-                    Photo Preview
+                    Photo & Video Preview
                   </div>
                 )}
               </div>
@@ -633,7 +670,14 @@ export default function CustomerStorefrontContent() {
                 }`}
               >
                 <div className="relative aspect-square bg-slate-100 dark:bg-slate-950 overflow-hidden">
-                  {prod.imageUrl ? (
+                  {prod.videoUrl || prod.mediaType === 'video' ? (
+                    <video
+                      src={prod.videoUrl || prod.imageUrl}
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : prod.imageUrl ? (
                     <img
                       src={prod.imageUrl}
                       alt={prod.name}
@@ -642,7 +686,7 @@ export default function CustomerStorefrontContent() {
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs">
                       <Layers className="w-6 h-6 opacity-40" />
-                      <span className="text-[10px] mt-1">No photo</span>
+                      <span className="text-[10px] mt-1">No media</span>
                     </div>
                   )}
 
@@ -790,7 +834,14 @@ export default function CustomerStorefrontContent() {
                 }`}
               >
                 <div className="relative h-56 bg-slate-100 dark:bg-slate-950 overflow-hidden">
-                  {prod.imageUrl ? (
+                  {prod.videoUrl || prod.mediaType === 'video' ? (
+                    <video
+                      src={prod.videoUrl || prod.imageUrl}
+                      controls
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  ) : prod.imageUrl ? (
                     <img
                       src={prod.imageUrl}
                       alt={prod.name}
@@ -799,7 +850,7 @@ export default function CustomerStorefrontContent() {
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 text-xs gap-1">
                       <Layers className="w-8 h-8 opacity-40" />
-                      <span>No photo available</span>
+                      <span>No media available</span>
                     </div>
                   )}
 

@@ -23,6 +23,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
   const [retailPrice, setRetailPrice] = useState('');
   const [stockCount, setStockCount] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [immediateBroadcast, setImmediateBroadcast] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -45,8 +46,11 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 8 * 1024 * 1024) {
-      setErrorMsg('Image size exceeds 8MB. Please choose a smaller photo.');
+    const isVideo = file.type.startsWith('video/');
+    setMediaType(isVideo ? 'video' : 'image');
+
+    if (file.size > (isVideo ? 25 : 8) * 1024 * 1024) {
+      setErrorMsg(isVideo ? 'Video exceeds 25MB limit.' : 'Image size exceeds 8MB. Please choose a smaller photo.');
       return;
     }
 
@@ -56,7 +60,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
         setImageUrl(event.target.result);
         setErrorMsg('');
 
-        // Upload to public Supabase Storage for WhatsApp & Storefront sharing
+        // Upload to public storage for WhatsApp & Storefront sharing
         const formData = new FormData();
         formData.append('file', file);
         fetch('/api/upload-image', { method: 'POST', body: formData })
@@ -66,7 +70,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
               setImageUrl(data.publicUrl);
             }
           })
-          .catch((err) => console.log('Cloud image upload fallback:', err));
+          .catch((err) => console.log('Cloud upload fallback:', err));
       }
     };
     reader.readAsDataURL(file);
@@ -82,6 +86,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
     const wPrice = parseFloat(wholesalePrice) || 0;
     const rPrice = parseFloat(retailPrice) || Math.round(wPrice * 1.25);
     const count = parseInt(stockCount) || 1;
+    const isVideo = mediaType === 'video';
 
     const newProd: CatalogProduct = {
       id: 'prod-' + Date.now(),
@@ -91,7 +96,9 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
       retailPrice: rPrice,
       stockCount: count,
       isAvailable: count > 0,
-      imageUrl: imageUrl || undefined,
+      imageUrl: isVideo ? undefined : (imageUrl || undefined),
+      videoUrl: isVideo ? imageUrl : undefined,
+      mediaType: mediaType,
       restockSubscribers: [],
       uploadedBy: actor,
       updatedAt: new Date().toISOString(),
@@ -139,14 +146,14 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
           {/* Photo Upload Area */}
           <div>
             <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              Product Photo (Device Files or Camera)
+              Product Photo or Video Clip (Device Gallery or Camera)
             </label>
             
             {/* Gallery input: allows picking files from device gallery or file system */}
             <input
               type="file"
               ref={galleryInputRef}
-              accept="image/*"
+              accept="image/*,video/*"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -155,7 +162,7 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
             <input
               type="file"
               ref={cameraInputRef}
-              accept="image/*"
+              accept="image/*,video/*"
               capture="environment"
               onChange={handleFileChange}
               className="hidden"
@@ -163,7 +170,18 @@ export function AddStockModal({ isOpen, onClose, onProductAdded }: AddStockModal
 
             {imageUrl ? (
               <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-950 h-48 group">
-                <img src={imageUrl} alt="Uploaded preview" className="w-full h-full object-cover" />
+                {mediaType === 'video' ? (
+                  <video src={imageUrl} controls playsInline className="w-full h-full object-cover" />
+                ) : (
+                  <img src={imageUrl} alt="Uploaded preview" className="w-full h-full object-cover" />
+                )}
+                <div className="absolute top-2 left-2 pointer-events-none">
+                  {mediaType === 'video' && (
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-black uppercase shadow">
+                      🎥 Video Clip
+                    </span>
+                  )}
+                </div>
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <button
                     type="button"

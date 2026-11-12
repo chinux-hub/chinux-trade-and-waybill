@@ -97,23 +97,83 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="en" className={isAdminPage ? 'dark' : theme}>
+    <html lang="en" className={isAdminPage ? 'dark' : theme} suppressHydrationWarning>
       <head>
         <title>
           {isAdminPage
-            ? 'Chinux TradeBill | Admin – Cash Flow Mission Control'
-            : 'Chinux TradeBill | Digital Waybills, Stock Broadcast & Wholesale for Nigerian Traders'}
+            ? 'Chinux Admin | Cash Flow Mission Control'
+            : 'Chinux | Wholesale Operating System & Digital Waybills for Nigerian Traders'}
         </title>
         <meta
           name="description"
-          content="Chinux TradeBill – Digital waybills, 4-digit pickup PIN, wholesale stock broadcast, Ugwo debt collection, cargo tracking, and daily sales logbook for Nigerian traders."
+          content="Chinux is the wholesale operating system for Nigerian traders in Alaba, Trade Fair, and Onitsha. Digital waybills, anti-theft 4-digit pickup PINs, WhatsApp status broadcast studio, and Ugwo debt collection."
+        />
+        <meta
+          name="keywords"
+          content="Chinux, Chinux Trade, Chinux TradeBill, Chinux Nigeria, Nigerian waybill app, Alaba international market, Onitsha main market, Trade fair Lagos, wholesale operating system, motor park haulage, pickup pin, ugwo debt collection"
         />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="canonical" href="https://chinux-tradebill.vercel.app" />
         <meta name="theme-color" content={isAdminPage ? '#881337' : '#059669'} />
         <link rel="icon" href="/chinux-logo.png" />
+        <link rel="apple-touch-icon" href="/chinux-logo.png" />
+
+        {/* Google Open Graph SEO Tags */}
+        <meta property="og:site_name" content="Chinux" />
+        <meta property="og:title" content="Chinux | Wholesale Operating System & Digital Waybills" />
+        <meta
+          property="og:description"
+          content="Chinux is the purpose-built trade OS for Nigerian wholesale merchants. Digital waybills, 4-digit pickup PINs, WhatsApp status broadcast, and Ugwo debt recovery."
+        />
+        <meta property="og:url" content="https://chinux-tradebill.vercel.app" />
+        <meta property="og:image" content="https://chinux-tradebill.vercel.app/chinux-logo.png" />
+        <meta property="og:type" content="website" />
+
+        {/* Twitter Card SEO */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Chinux | Wholesale Operating System for Nigerian Traders" />
+        <meta
+          name="twitter:description"
+          content="Digital waybills, 4-digit pickup PINs, WhatsApp status broadcast studio, and Ugwo debt recovery for Nigerian traders."
+        />
+        <meta name="twitter:image" content="https://chinux-tradebill.vercel.app/chinux-logo.png" />
+
+        {/* Google Site Verification (Placeholder for Google Search Console) */}
+        <meta name="google-site-verification" content="google-site-verification-chinux" />
       </head>
-      <body className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${isAdminPage ? 'bg-slate-950 text-slate-100' : isStorePage ? 'bg-slate-50 dark:bg-slate-950' : isPublicLanding ? 'bg-slate-950' : 'pb-16 md:pb-8'}`}>
+      <body
+        suppressHydrationWarning
+        className={`min-h-screen flex flex-col selection:bg-emerald-500 selection:text-white ${isAdminPage ? 'bg-slate-950 text-slate-100' : isStorePage ? 'bg-slate-50 dark:bg-slate-950' : isPublicLanding ? 'bg-slate-950' : 'pb-16 md:pb-8'}`}
+      >
+        {/* Google Search Engine JSON-LD Schema Markup */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'Chinux',
+              alternateName: ['Chinux TradeBill', 'Chinux Trade', 'Chinux Nigeria', 'Chinux Wholesale OS'],
+              url: 'https://chinux-tradebill.vercel.app',
+              applicationCategory: 'BusinessApplication',
+              operatingSystem: 'All (Web, Android, iOS)',
+              description:
+                'Chinux is the digital wholesale operating system for Nigerian traders. Features include digital waybills, 4-digit pickup PINs, WhatsApp status broadcast studio, Ugwo debt recovery, and daily sales logbook.',
+              offers: {
+                '@type': 'Offer',
+                price: '0',
+                priceCurrency: 'NGN',
+              },
+              publisher: {
+                '@type': 'Organization',
+                name: 'Chinux Technologies',
+                url: 'https://chinux-tradebill.vercel.app',
+                logo: 'https://chinux-tradebill.vercel.app/chinux-logo.png',
+              },
+            }),
+          }}
+        />
         
         {/* App Update Available Floating Banner */}
         <UpdatePromptBanner />

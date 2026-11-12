@@ -1,9 +1,17 @@
-export function formatNaira(amount: number): string {
-  return new Intl.NumberFormat('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    maximumFractionDigits: 0,
-  }).format(amount).replace('NGN', '₦');
+export function formatNaira(amount?: number | null): string {
+  if (amount === undefined || amount === null || isNaN(Number(amount))) {
+    return '₦0';
+  }
+  const val = Number(amount);
+  try {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      maximumFractionDigits: 0,
+    }).format(val).replace('NGN', '₦');
+  } catch {
+    return `₦${val.toLocaleString()}`;
+  }
 }
 
 export function formatDate(dateString?: string): string {

@@ -27,6 +27,11 @@ import {
   Download,
   Flame,
   Images,
+  Film,
+  Video,
+  Trash2,
+  Save,
+  PlusCircle,
 } from 'lucide-react';
 import { CatalogProduct, TraderProfile } from '@/types';
 import { storage } from '@/lib/storage';
@@ -34,6 +39,18 @@ import { formatNaira } from '@/lib/formatters';
 import { createSmsLink } from '@/lib/whatsapp';
 
 export type FlyerTheme = 'emerald' | 'royal_blue' | 'crimson_gold' | 'modern_gold' | 'clean_white';
+
+export interface GalleryMediaItem {
+  id: string;
+  file: File;
+  previewUrl: string;
+  type: 'image' | 'video';
+  name: string;
+  price: string;
+  category: string;
+  selected: boolean;
+  savedToCatalog?: boolean;
+}
 
 export interface FlyerThemeConfig {
   name: string;
@@ -168,6 +185,163 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
   const [flyerSubHeader, setFlyerSubHeader] = useState('CHINUX VERIFIED WHOLESALE CATALOG');
   const [isCustomizingFlyer, setIsCustomizingFlyer] = useState(false);
   const [flyerPreviewUrl, setFlyerPreviewUrl] = useState<string | null>(null);
+
+  // 📱 Device Gallery Organizer States (Photos & Videos)
+  const [sourceTab, setSourceTab] = useState<'catalog' | 'gallery'>('catalog');
+  const [galleryItems, setGalleryItems] = useState<GalleryMediaItem[]>([]);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handlePickGalleryFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newItems: GalleryMediaItem[] = [];
+    Array.from(files).forEach((file, idx) => {
+      const isVideo = file.type.startsWith('video/');
+      const previewUrl = URL.createObjectURL(file);
+      const cleanName = file.name
+        .replace(/\.[^/.]+$/, '')
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+      newItems.push({
+        id: 'gal_' + Date.now() + '_' + idx,
+        file,
+        previewUrl,
+        type: isVideo ? 'video' : 'image',
+        name: cleanName,
+        price: '',
+        category: 'Wholesale Stock',
+        selected: true,
+        savedToCatalog: false,
+      });
+    });
+
+    setGalleryItems((prev) => [...prev, ...newItems]);
+    setSourceTab('gallery');
+    e.target.value = '';
+  };
+
+  const handleToggleGalleryItem = (id: string) => {
+    setGalleryItems((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, selected: !g.selected } : g))
+    );
+  };
+
+  const handleSelectAllGallery = () => {
+    setGalleryItems((prev) => prev.map((g) => ({ ...g, selected: true })));
+  };
+
+  const handleDeselectAllGallery = () => {
+    setGalleryItems((prev) => prev.map((g) => ({ ...g, selected: false })));
+  };
+
+  const handleRemoveGalleryItem = (id: string) => {
+    setGalleryItems((prev) => prev.filter((g) => g.id !== id));
+  };
+
+  const handleUpdateGalleryField = (id: string, field: 'name' | 'price' | 'category', value: string) => {
+    setGalleryItems((prev) =>
+      prev.map((g) => (g.id === id ? { ...g, [field]: value } : g))
+    );
+  };
+
+  const handleSaveGalleryItemToCatalog = (item: GalleryMediaItem) => {
+    const isVideo = item.type === 'video';
+    const parsedPrice = item.price ? parseInt(item.price.replace(/\D/g, '') || '0', 10) : 0;
+    const actor = profile.activeRole === 'oga' ? 'Oga Chinua' : 'Apprentice Chinedu';
+
+    const newProd: CatalogProduct = {
+      id: 'prod-' + Date.now(),
+      name: item.name.trim() || 'Wholesale Stock Item',
+      category: item.category || 'Wholesale Stock',
+      wholesalePrice: parsedPrice,
+      retailPrice: parsedPrice ? Math.round(parsedPrice * 1.15) : 0,
+      stockCount: 1,
+      isAvailable: true,
+      imageUrl: isVideo ? undefined : item.previewUrl,
+      videoUrl: isVideo ? item.previewUrl : undefined,
+      mediaType: item.type,
+      restockSubscribers: [],
+      uploadedBy: actor,
+      updatedAt: new Date().toISOString(),
+    };
+
+    storage.addProductToCatalog(newProd, actor);
+    setCatalog(storage.getCatalog());
+    setGalleryItems((prev) =>
+      prev.map((g) => (g.id === item.id ? { ...g, savedToCatalog: true } : g))
+    );
+  };
+
+  const handleShareGalleryBatchWhatsApp = async () => {
+    const selected = galleryItems.filter((g) => g.selected);
+    if (selected.length === 0) {
+      alert('Please select at least one photo or video from your gallery.');
+      return;
+    }
+
+    setIsSharingBatch(true);
+    try {
+      const files = selected.map((g) => g.file);
+      const itemsList = selected
+        .slice(0, 7)
+        .map((g, idx) => {
+          const parsed = g.price ? parseInt(g.price.replace(/\D/g, '') || '0', 10) : 0;
+          return `${idx + 1}. *${g.name}*${parsed > 0 ? ` - ${formatNaira(parsed)}` : ''} ${g.type === 'video' ? '🎥' : '📸'}`;
+        })
+        .join('\n');
+
+      const caption = `🛒 *${profile.businessName || 'Wholesale Store'}* Today's Arrivals
+${itemsList}
+
+👉 *View & Order Online:* ${storefrontUrl}
+📞 ${profile.phone}`;
+
+      if (typeof navigator !== 'undefined' && (navigator as any).canShare && (navigator as any).canShare({ files })) {
+        await navigator.share({
+          files,
+          title: `${profile.businessName} Wholesale Stock`,
+          text: caption,
+        });
+      } else {
+        selected.forEach((g) => {
+          const a = document.createElement('a');
+          a.href = g.previewUrl;
+          a.download = g.file.name;
+          a.click();
+        });
+        handleSendToWhatsApp(caption);
+      }
+    } catch (err) {
+      console.log('handleShareGalleryBatchWhatsApp error:', err);
+    }
+    setIsSharingBatch(false);
+  };
+
+  const handleShareSingleGalleryItem = async (item: GalleryMediaItem) => {
+    const parsedPrice = item.price ? parseInt(item.price.replace(/\D/g, '') || '0', 10) : 0;
+    const priceText = parsedPrice > 0 ? `\n💰 *${formatNaira(parsedPrice)}* / carton` : '';
+    const caption = `📦 *${item.name}* (${item.type === 'video' ? '🎥 Video' : '📸 Photo'})${priceText}
+🏢 *${profile.businessName || 'Wholesale Store'}*
+👉 *Order Online:* ${storefrontUrl}
+📞 WhatsApp/Call: ${profile.phone}`;
+
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).canShare && (navigator as any).canShare({ files: [item.file] })) {
+        await navigator.share({
+          files: [item.file],
+          title: item.name,
+          text: caption,
+        });
+        return;
+      }
+    } catch (err) {
+      console.log('Single gallery share fallback:', err);
+    }
+
+    handleSendToWhatsApp(caption);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -323,11 +497,33 @@ ${items}
   // ⚡ METHOD 1: GENERATE ALL-IN-ONE CATALOG FLYER (CANVAS)
   // ==============================================================
   const generateCatalogFlyerBlob = async (): Promise<Blob | null> => {
+    const flyerItems = selectedProducts.length > 0
+      ? selectedProducts.map((p) => ({
+          name: p.name,
+          category: p.category,
+          price: p.wholesalePrice,
+          imageUrl: p.imageUrl,
+          isAvailable: p.isAvailable && p.stockCount > 0,
+          stockCount: p.stockCount,
+        }))
+      : galleryItems
+          .filter((g) => g.selected)
+          .map((g) => ({
+            name: g.name,
+            category: g.category,
+            price: g.price ? parseInt(g.price.replace(/\D/g, '') || '0', 10) : 0,
+            imageUrl: g.type === 'image' ? g.previewUrl : undefined,
+            isAvailable: true,
+            stockCount: 1,
+          }));
+
+    if (flyerItems.length === 0) return null;
+
     const canvas = document.createElement('canvas');
     const width = 1080;
     // Calculate height dynamically based on product count
     const cols = 2;
-    const rows = Math.ceil(selectedProducts.length / cols);
+    const rows = Math.ceil(flyerItems.length / cols);
     const itemHeight = 320;
     const headerHeight = 360;
     const footerHeight = 260;
@@ -379,7 +575,7 @@ ${items}
     ctx.font = 'bold 28px sans-serif';
     ctx.textAlign = 'center';
     const headline = flyerHeadline.trim() || "TODAY'S WHOLESALE ARRIVALS & PRICES";
-    ctx.fillText(`📢 ${headline.toUpperCase()} (${selectedProducts.length} ITEMS)`, width / 2, 296);
+    ctx.fillText(`📢 ${headline.toUpperCase()} (${flyerItems.length} ITEMS)`, width / 2, 296);
     ctx.textAlign = 'left';
 
     // PRODUCTS GRID
@@ -388,8 +584,8 @@ ${items}
     const gapX = 40;
     const startX = 60;
 
-    for (let i = 0; i < selectedProducts.length; i++) {
-      const p = selectedProducts[i];
+    for (let i = 0; i < flyerItems.length; i++) {
+      const p = flyerItems[i];
       const col = i % cols;
       const row = Math.floor(i / cols);
       const x = startX + col * (colWidth + gapX);
@@ -456,7 +652,7 @@ ${items}
       if (includePrice) {
         ctx.fillStyle = t.priceColor;
         ctx.font = '900 36px sans-serif';
-        ctx.fillText(formatNaira(p.wholesalePrice), x + imgSize + 40, y + 145);
+        ctx.fillText(formatNaira(p.price), x + imgSize + 40, y + 145);
       } else {
         ctx.fillStyle = t.accent;
         ctx.font = 'bold 24px sans-serif';
@@ -1282,7 +1478,245 @@ Shop: ${profile.businessName}
           </label>
         </div>
 
-        {/* 📦 BATCH PRODUCT SELECTION */}
+        {/* 📦 MEDIA SOURCE TABS: Catalog vs Device Gallery (Photos & Videos) */}
+        <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setSourceTab('catalog')}
+            className={`pb-2 text-xs font-black flex items-center gap-1.5 border-b-2 transition-all ${
+              sourceTab === 'catalog'
+                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400'
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <Package className="w-3.5 h-3.5" />
+            <span>From Catalog ({catalog.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSourceTab('gallery')}
+            className={`pb-2 text-xs font-black flex items-center gap-1.5 border-b-2 transition-all ${
+              sourceTab === 'gallery'
+                ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+          >
+            <Images className="w-3.5 h-3.5" />
+            <span>Direct Gallery (Photos & Videos) ({galleryItems.length})</span>
+            {galleryItems.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+            )}
+          </button>
+        </div>
+
+        {/* 📱 TAB 1: DEVICE GALLERY ORGANIZER (PHOTOS & VIDEOS) */}
+        {sourceTab === 'gallery' && (
+          <div className="space-y-3 border-2 border-purple-500/40 rounded-2xl p-3.5 bg-purple-50/30 dark:bg-navy-950/60 animate-fadeIn">
+            {/* Hidden Gallery Input */}
+            <input
+              type="file"
+              ref={galleryInputRef}
+              accept="image/*,video/*"
+              multiple
+              onChange={handlePickGalleryFiles}
+              className="hidden"
+            />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Film className="w-4 h-4 text-purple-600" />
+                  <span>Phone & Computer Gallery Media</span>
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                  Organize unboxing videos, showroom clips & product photos
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>Pick Photos & Videos</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Empty State / Dropzone */}
+            {galleryItems.length === 0 ? (
+              <div
+                onClick={() => galleryInputRef.current?.click()}
+                className="p-6 border-2 border-dashed border-purple-300 dark:border-purple-800/80 rounded-2xl text-center cursor-pointer hover:bg-purple-100/30 dark:hover:bg-purple-950/30 transition-all space-y-2"
+              >
+                <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
+                  <Camera className="w-6 h-6" />
+                </div>
+                <h4 className="text-xs font-black text-slate-800 dark:text-slate-200">
+                  Tap to Choose Photos & Short Videos from Gallery
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                  Select container arrivals, shop videos, or carton photos. You can name them, add wholesale prices, and broadcast directly to WhatsApp Status!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {/* Batch Bar */}
+                <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl bg-purple-100/60 dark:bg-purple-950/50 text-[11px]">
+                  <span className="font-bold text-purple-900 dark:text-purple-200">
+                    {galleryItems.filter((g) => g.selected).length} of {galleryItems.length} items ready to post
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSelectAllGallery}
+                      className="font-bold text-purple-700 dark:text-purple-300 hover:underline"
+                    >
+                      Select All
+                    </button>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={handleDeselectAllGallery}
+                      className="text-slate-500 hover:underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+
+                {/* Gallery Items List */}
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-1 no-scrollbar">
+                  {galleryItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`p-2.5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 ${
+                        item.selected
+                          ? 'bg-white dark:bg-navy-900 border-purple-500 shadow-sm'
+                          : 'bg-white/60 dark:bg-navy-950/40 border-slate-200 dark:border-slate-800 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 w-full sm:w-auto min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleGalleryItem(item.id)}
+                          className="shrink-0"
+                        >
+                          {item.selected ? (
+                            <CheckSquare className="w-4 h-4 text-purple-600" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-400" />
+                          )}
+                        </button>
+
+                        {/* Media Preview Box */}
+                        <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-slate-900 shrink-0 border border-purple-300 dark:border-purple-800">
+                          {item.type === 'video' ? (
+                            <video
+                              src={item.previewUrl}
+                              className="w-full h-full object-cover"
+                              muted
+                              playsInline
+                            />
+                          ) : (
+                            <img
+                              src={item.previewUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded text-[8px] font-black uppercase bg-black/70 text-white">
+                            {item.type === 'video' ? '🎥 Video' : '📸 Photo'}
+                          </span>
+                        </div>
+
+                        {/* Editable Name & Price Inputs */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => handleUpdateGalleryField(item.id, 'name', e.target.value)}
+                            placeholder="Product Title"
+                            className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-navy-950 text-slate-900 dark:text-white text-[11px] font-bold"
+                          />
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={item.price}
+                              onChange={(e) => handleUpdateGalleryField(item.id, 'price', e.target.value)}
+                              placeholder="Price e.g. 45000"
+                              className="w-28 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-navy-950 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold"
+                            />
+                            {item.savedToCatalog && (
+                              <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                                <CheckCircle className="w-3 h-3" />
+                                <span>In Catalog</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end shrink-0">
+                        {!item.savedToCatalog && (
+                          <button
+                            type="button"
+                            onClick={() => handleSaveGalleryItemToCatalog(item)}
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-600 dark:text-slate-300 text-[10px] font-bold flex items-center gap-1"
+                            title="Save permanently to Chinux Catalog"
+                          >
+                            <Save className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="hidden sm:inline">Save</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleShareSingleGalleryItem(item)}
+                          className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black shadow flex items-center gap-1 active:scale-95"
+                        >
+                          <Send className="w-3 h-3" />
+                          <span>Post to WhatsApp</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveGalleryItem(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                          title="Remove from broadcast queue"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 🚀 1-CLICK QUEUE SELECTED GALLERY MEDIA TO WHATSAPP */}
+                <button
+                  type="button"
+                  disabled={isSharingBatch || galleryItems.filter((g) => g.selected).length === 0}
+                  onClick={handleShareGalleryBatchWhatsApp}
+                  className="w-full py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-600 hover:opacity-95 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>
+                    {isSharingBatch
+                      ? 'Pushing Gallery Media to WhatsApp...'
+                      : `Queue All Selected Photos & Videos (${galleryItems.filter((g) => g.selected).length}) in WhatsApp`}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 📦 TAB 2: BATCH PRODUCT SELECTION (FROM CATALOG) */}
+        {sourceTab === 'catalog' && (
         <div className="space-y-2 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 bg-slate-50/50 dark:bg-navy-950/40">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
@@ -1319,8 +1753,19 @@ Shop: ${profile.businessName}
 
           {/* Product Checklist */}
           {catalog.length === 0 ? (
-            <div className="p-3 text-center text-xs text-slate-400">
-              No products found in catalog. Add items in Catalog first.
+            <div className="p-4 text-center text-xs text-slate-400 space-y-2">
+              <p>No products found in catalog yet.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSourceTab('gallery');
+                  galleryInputRef.current?.click();
+                }}
+                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow transition-all inline-flex items-center gap-1.5"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Pick Photos & Videos from Phone Gallery Now</span>
+              </button>
             </div>
           ) : (
             <div className="max-h-32 overflow-y-auto space-y-1.5 pr-1 no-scrollbar">
@@ -1378,6 +1823,7 @@ Shop: ${profile.businessName}
             </div>
           )}
         </div>
+        )}
 
         {/* 🎬 SLIDE-BY-SLIDE INDIVIDUAL POSTER */}
         <div className="space-y-3 border-2 border-purple-500/40 dark:border-purple-600/30 rounded-3xl p-4 bg-purple-50/40 dark:bg-purple-950/20">

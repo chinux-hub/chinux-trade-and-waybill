@@ -1,0 +1,10 @@
+# robots.txt for Chinux TradeBill (https://chinux-tradebill.vercel.app)
+User-agent: *
+Allow: /
+Allow: /welcome
+Allow: /store
+Allow: /join
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://chinux-tradebill.vercel.app/sitemap.xml

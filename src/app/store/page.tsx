@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import CustomerStorefrontContent from '@/components/CustomerStorefrontContent';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -58,14 +59,16 @@ export async function generateMetadata({
 
 export default function CustomerStorefrontPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-xs text-slate-400">
-          Loading wholesale storefront...
-        </div>
-      }
-    >
-      <CustomerStorefrontContent />
-    </Suspense>
+    <ErrorBoundary fallbackTitle="Chinux Wholesale Storefront">
+      <Suspense
+        fallback={
+          <div className="min-h-screen bg-slate-950 flex items-center justify-center text-xs text-slate-400">
+            Loading wholesale storefront...
+          </div>
+        }
+      >
+        <CustomerStorefrontContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

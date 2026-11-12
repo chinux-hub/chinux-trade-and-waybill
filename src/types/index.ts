@@ -179,6 +179,8 @@ export interface CatalogProduct {
   stockCount: number;
   isAvailable: boolean;
   imageUrl?: string;
+  videoUrl?: string;
+  mediaType?: 'image' | 'video';
   restockSubscribers: string[]; // list of phone numbers waiting for stock
   uploadedBy?: string; // 'Oga Chinua' or 'Apprentice Chinedu'
   updatedAt?: string;

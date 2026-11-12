@@ -364,6 +364,20 @@ ${itemsList}
         setActiveSlideIndex(0);
       }
 
+      // Auto-publish store snapshot to public registry so external visitors can see it
+      if (allProds.length > 0 || prof.businessName) {
+        fetch('/api/store/data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessName: prof.businessName,
+            phone: prof.phone,
+            marketHub: prof.marketLocation,
+            catalog: allProds,
+          }),
+        }).catch((err) => console.log('Storefront cloud publish notice:', err));
+      }
+
       // Auto-migrate any base64 images to public cloud storage for WhatsApp previews
       allProds.forEach((prod) => {
         if (prod.imageUrl && prod.imageUrl.startsWith('data:')) {
@@ -397,6 +411,23 @@ ${itemsList}
   const storeParams = new URLSearchParams();
   if (profile.businessName) storeParams.set('shop', profile.businessName);
   if (profile.phone) storeParams.set('phone', profile.phone);
+
+  // Encode lightweight portable catalog snapshot so ANY device opening this link gets the full inventory
+  const broadcastItems = selectedProducts.length > 0 ? selectedProducts : catalog;
+  if (broadcastItems.length > 0) {
+    try {
+      const compactItems = broadcastItems.slice(0, 8).map((p) => ({
+        id: p.id,
+        n: p.name,
+        w: p.wholesalePrice,
+        c: p.category,
+        i: p.imageUrl && p.imageUrl.startsWith('http') ? p.imageUrl : undefined,
+        v: p.videoUrl && p.videoUrl.startsWith('http') ? p.videoUrl : undefined,
+      }));
+      const serialized = btoa(unescape(encodeURIComponent(JSON.stringify(compactItems))));
+      storeParams.set('catalog_data', serialized);
+    } catch (e) {}
+  }
   const storefrontUrl = `${baseStorefrontUrl}?${storeParams.toString()}`;
 
   // Total slides = Selected products + 1 final slide (solely for the storefront link)
@@ -896,6 +927,27 @@ ${items}
     }
     setIsSharingPhoto(false);
     handleSendToWhatsApp(caption);
+  };
+
+  const handleShareFinalSlidePhoto = async () => {
+    setIsSharingPhoto(true);
+    try {
+      const logoUrl = `${origin}/chinux-logo.png`;
+      const file = await urlToFile(logoUrl, `${(profile.businessName || 'store').replace(/[^a-zA-Z0-9]/g, '_')}_storefront.png`);
+      if (file && typeof navigator !== 'undefined' && (navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `${profile.businessName || 'Wholesale Store'} - Digital Storefront`,
+          text: currentSlideText,
+        });
+        setIsSharingPhoto(false);
+        return;
+      }
+    } catch (err) {
+      console.log('Final slide photo share fallback:', err);
+    }
+    setIsSharingPhoto(false);
+    handleSendToWhatsApp(currentSlideText);
   };
 
   // ==============================================================
@@ -2005,22 +2057,45 @@ Shop: ${profile.businessName}
                 {currentSlideText}
               </pre>
 
-              <div className="flex gap-2">
+              <div className="space-y-2">
                 <button
                   type="button"
-                  onClick={() => handleSendToWhatsApp(currentSlideText)}
-                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
+                  disabled={isSharingPhoto}
+                  onClick={handleShareFinalSlidePhoto}
+                  className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 active:scale-95"
                 >
-                  <Send className="w-4 h-4" />
-                  <span>Upload Final Slide to WhatsApp Status</span>
+                  <Camera className="w-4 h-4 text-emerald-200" />
+                  <span>
+                    {isSharingPhoto ? 'Opening WhatsApp with Storefront Graphic...' : 'Post Final Slide Image + Link to WhatsApp Status'}
+                  </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => handleCopySlideText(currentSlideText, 999)}
-                  className="px-3 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold"
-                >
-                  {copiedIndex === 999 ? 'Copied!' : 'Copy'}
-                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSendToWhatsApp(currentSlideText)}
+                    className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>Post Text Status Link</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.open(storefrontUrl, '_blank')}
+                    className="px-3 py-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/60 text-emerald-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1"
+                    title="Preview how external customers see your storefront"
+                  >
+                    <Store className="w-3.5 h-3.5" />
+                    <span>Test Link</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleCopySlideText(currentSlideText, 999)}
+                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold"
+                  >
+                    {copiedIndex === 999 ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
               </div>
             </div>
           )}

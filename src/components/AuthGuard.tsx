@@ -20,6 +20,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     pathname === '/welcome' ||
     pathname === '/join' ||
     pathname === '/store' ||
+    pathname?.startsWith('/store') ||
     pathname?.startsWith('/waybill/') || // Public receiver waybill verification
     pathname?.startsWith('/admin'); // Admin has its own passkey authentication
 

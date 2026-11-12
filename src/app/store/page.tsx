@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 
 const CustomerStorefrontContent = dynamic(
   () => import('@/components/CustomerStorefrontContent'),
@@ -71,5 +72,18 @@ export async function generateMetadata({
 }
 
 export default function CustomerStorefrontPage() {
-  return <CustomerStorefrontContent />;
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-slate-400 text-xs">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mb-3 animate-pulse">
+            <span className="font-black text-emerald-400 text-lg">CX</span>
+          </div>
+          <span>Loading Wholesale Storefront...</span>
+        </div>
+      }
+    >
+      <CustomerStorefrontContent />
+    </Suspense>
+  );
 }

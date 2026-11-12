@@ -73,7 +73,52 @@ export default function CustomerStorefrontContent() {
     const prof = storage.getProfile();
     setProfile(prof);
     const existing = storage.getCatalog();
-    setCatalog(Array.isArray(existing) ? existing : []);
+    setCatalog(Array.isArray(existing) && existing.length > 0 ? existing : []);
+
+    // 1. Instantly decode portable catalog snapshot if passed in the URL (works offline & across all devices)
+    const paramCatData = searchParams.get('catalog_data') || searchParams.get('items');
+    if (paramCatData) {
+      try {
+        const decodedJson = decodeURIComponent(escape(atob(decodeURIComponent(paramCatData))));
+        const parsed = JSON.parse(decodedJson);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const hydrated: CatalogProduct[] = parsed.map((item: any) => ({
+            id: item.id || 'prod_' + Math.random().toString(36).substring(2, 7),
+            name: item.n || item.name || 'Wholesale Stock Item',
+            wholesalePrice: item.w || item.wholesalePrice || 0,
+            retailPrice: item.r || item.retailPrice || (item.w ? Math.round(item.w * 1.15) : 0),
+            category: item.c || item.category || 'Wholesale Stock',
+            imageUrl: item.i || item.imageUrl || '',
+            videoUrl: item.v || item.videoUrl || '',
+            mediaType: (item.v || item.videoUrl) ? 'video' : 'image',
+            stockCount: item.s || item.stockCount || 10,
+            isAvailable: true,
+            restockSubscribers: [],
+          }));
+          setCatalog(hydrated);
+        }
+      } catch (err) {
+        console.log('Error decoding portable catalog_data:', err);
+      }
+    }
+
+    // 2. Fetch live published store catalog from public API
+    if (paramPhone || paramShop) {
+      const q = new URLSearchParams();
+      if (paramPhone) q.set('phone', paramPhone);
+      if (paramShop) q.set('shop', paramShop);
+      fetch(`/api/store/data?${q.toString()}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.success && Array.isArray(data.catalog) && data.catalog.length > 0) {
+            setCatalog(data.catalog);
+            if (data.businessName) {
+              setProfile((prev) => ({ ...prev, businessName: data.businessName }));
+            }
+          }
+        })
+        .catch((err) => console.log('Store fetch notice:', err));
+    }
 
     try {
       const savedView = localStorage.getItem('chinux_store_view_mode') as StorefrontViewMode;

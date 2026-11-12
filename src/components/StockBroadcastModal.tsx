@@ -74,34 +74,34 @@ export const FLYER_THEMES: Record<FlyerTheme, FlyerThemeConfig> = {
   emerald: {
     name: 'Emerald Luxury (Default)',
     badge: '🌿 Green & Gold',
-    bgGrad: ['#061325', '#0a1d37', '#020b18'],
+    bgGrad: ['#022c22', '#064e3b', '#021e17'],
     accent: '#10b981',
-    accentText: '#10b981',
+    accentText: '#34d399',
     priceColor: '#34d399',
     cardBg: 'rgba(255, 255, 255, 0.05)',
-    cardBorder: 'rgba(16, 185, 129, 0.3)',
+    cardBorder: 'rgba(52, 211, 153, 0.4)',
     titleColor: '#ffffff',
-    subtextColor: '#94a3b8',
+    subtextColor: '#a7f3d0',
     bannerBg: '#10b981',
     bannerText: '#ffffff',
-    footerBg: '#10b981',
-    footerText: '#061325',
-    footerSubText: '#022c22',
+    footerBg: '#059669',
+    footerText: '#ffffff',
+    footerSubText: '#d1fae5',
   },
   royal_blue: {
     name: 'Corporate Royal Blue',
     badge: '🔵 Royal Marine',
-    bgGrad: ['#051126', '#0b1e42', '#030a17'],
+    bgGrad: ['#031024', '#0f274d', '#020b18'],
     accent: '#3b82f6',
     accentText: '#60a5fa',
-    priceColor: '#60a5fa',
+    priceColor: '#93c5fd',
     cardBg: 'rgba(255, 255, 255, 0.06)',
     cardBorder: 'rgba(59, 130, 246, 0.35)',
     titleColor: '#ffffff',
     subtextColor: '#93c5fd',
     bannerBg: '#2563eb',
     bannerText: '#ffffff',
-    footerBg: '#2563eb',
+    footerBg: '#1d4ed8',
     footerText: '#ffffff',
     footerSubText: '#dbeafe',
   },
@@ -118,9 +118,9 @@ export const FLYER_THEMES: Record<FlyerTheme, FlyerThemeConfig> = {
     subtextColor: '#fca5a5',
     bannerBg: '#e11d48',
     bannerText: '#ffffff',
-    footerBg: '#f59e0b',
-    footerText: '#1c1917',
-    footerSubText: '#451a03',
+    footerBg: '#be123c',
+    footerText: '#ffffff',
+    footerSubText: '#fecdd3',
   },
   modern_gold: {
     name: 'Onyx & Champagne Gold',
@@ -135,9 +135,9 @@ export const FLYER_THEMES: Record<FlyerTheme, FlyerThemeConfig> = {
     subtextColor: '#a8a29e',
     bannerBg: '#b45309',
     bannerText: '#ffffff',
-    footerBg: '#d97706',
-    footerText: '#000000',
-    footerSubText: '#451a03',
+    footerBg: '#78350f',
+    footerText: '#fef3c7',
+    footerSubText: '#fde68a',
   },
   clean_white: {
     name: 'Clean White High-Contrast',
@@ -496,7 +496,7 @@ ${items}
   // ==============================================================
   // ⚡ METHOD 1: GENERATE ALL-IN-ONE CATALOG FLYER (CANVAS)
   // ==============================================================
-  const generateCatalogFlyerBlob = async (): Promise<Blob | null> => {
+  const generateCatalogFlyerBlob = async (themeOverride?: FlyerTheme): Promise<Blob | null> => {
     const flyerItems = selectedProducts.length > 0
       ? selectedProducts.map((p) => ({
           name: p.name,
@@ -534,7 +534,8 @@ ${items}
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    const t = FLYER_THEMES[flyerTheme] || FLYER_THEMES.emerald;
+    const activeThemeKey = themeOverride || flyerTheme;
+    const t = FLYER_THEMES[activeThemeKey] || FLYER_THEMES.emerald;
 
     // Background gradient
     const grad = ctx.createLinearGradient(0, 0, 0, height);
@@ -700,10 +701,11 @@ ${items}
   };
 
   // Live Flyer Preview Generator
-  const handlePreviewFlyer = async () => {
+  const handlePreviewFlyer = async (themeOverride?: FlyerTheme) => {
+    const validTheme = typeof themeOverride === 'string' ? themeOverride : undefined;
     setIsGeneratingFlyer(true);
     try {
-      const blob = await generateCatalogFlyerBlob();
+      const blob = await generateCatalogFlyerBlob(validTheme);
       if (blob) {
         if (flyerPreviewUrl) URL.revokeObjectURL(flyerPreviewUrl);
         const url = URL.createObjectURL(blob);
@@ -719,7 +721,7 @@ ${items}
   const handleShareFlyerStatus = async () => {
     setIsGeneratingFlyer(true);
     try {
-      const blob = await generateCatalogFlyerBlob();
+      const blob = await generateCatalogFlyerBlob(flyerTheme);
       if (!blob) {
         alert('Could not generate flyer image.');
         setIsGeneratingFlyer(false);
@@ -760,7 +762,7 @@ ${items}
   const handleDownloadFlyer = async () => {
     setIsGeneratingFlyer(true);
     try {
-      const blob = await generateCatalogFlyerBlob();
+      const blob = await generateCatalogFlyerBlob(flyerTheme);
       if (blob) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1268,7 +1270,7 @@ Shop: ${profile.businessName}
                     <button
                       type="button"
                       disabled={isGeneratingFlyer || selectedProducts.length === 0}
-                      onClick={handlePreviewFlyer}
+                      onClick={() => handlePreviewFlyer()}
                       className="px-2.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-all"
                       title="Live Preview Flyer"
                     >
@@ -1342,7 +1344,7 @@ Shop: ${profile.businessName}
                             type="button"
                             onClick={() => {
                               setFlyerTheme(themeKey);
-                              if (flyerPreviewUrl) handlePreviewFlyer();
+                              handlePreviewFlyer(themeKey);
                             }}
                             className={`p-2 rounded-xl text-left border transition-all ${
                               isSelected

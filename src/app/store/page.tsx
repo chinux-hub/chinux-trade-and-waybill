@@ -1,7 +1,20 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import CustomerStorefrontContent from '@/components/CustomerStorefrontContent';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import dynamic from 'next/dynamic';
+
+const CustomerStorefrontContent = dynamic(
+  () => import('@/components/CustomerStorefrontContent'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-slate-400 text-xs">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mb-3 animate-pulse">
+          <span className="font-black text-emerald-400 text-lg">CX</span>
+        </div>
+        <span>Loading Wholesale Storefront...</span>
+      </div>
+    ),
+  }
+);
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined };
@@ -58,17 +71,5 @@ export async function generateMetadata({
 }
 
 export default function CustomerStorefrontPage() {
-  return (
-    <ErrorBoundary fallbackTitle="Chinux Wholesale Storefront">
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-slate-950 flex items-center justify-center text-xs text-slate-400">
-            Loading wholesale storefront...
-          </div>
-        }
-      >
-        <CustomerStorefrontContent />
-      </Suspense>
-    </ErrorBoundary>
-  );
+  return <CustomerStorefrontContent />;
 }

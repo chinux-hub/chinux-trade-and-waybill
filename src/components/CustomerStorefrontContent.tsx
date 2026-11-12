@@ -273,6 +273,17 @@ export default function CustomerStorefrontContent() {
       : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-emerald-500',
   };
 
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-slate-400 text-xs">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mb-3 animate-pulse">
+          <span className="font-black text-emerald-400 text-lg">CX</span>
+        </div>
+        <span>Loading Wholesale Storefront...</span>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen transition-colors duration-200 ${themeClasses.wrapper}`}>
       <div className="space-y-6 animate-fadeIn pb-24 max-w-5xl mx-auto px-3 sm:px-4 pt-4 sm:pt-6">

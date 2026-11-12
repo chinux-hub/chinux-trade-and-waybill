@@ -191,6 +191,9 @@ export function StockBroadcastModal({ product, isOpen, onClose }: StockBroadcast
   const [galleryItems, setGalleryItems] = useState<GalleryMediaItem[]>([]);
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
+  // 🌐 Multi-Channel Social Media Broadcast Mode
+  const [socialChannel, setSocialChannel] = useState<'whatsapp' | 'facebook' | 'instagram' | 'tiktok' | 'sms'>('whatsapp');
+
   const handlePickGalleryFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -395,9 +398,6 @@ ${itemsList}
   if (profile.businessName) storeParams.set('shop', profile.businessName);
   if (profile.phone) storeParams.set('phone', profile.phone);
   const storefrontUrl = `${baseStorefrontUrl}?${storeParams.toString()}`;
-
-  // Multi-Channel Social Media Broadcast Mode
-  const [socialChannel, setSocialChannel] = useState<'whatsapp' | 'facebook' | 'instagram' | 'tiktok' | 'sms'>('whatsapp');
 
   // Total slides = Selected products + 1 final slide (solely for the storefront link)
   const totalSlides = selectedProducts.length + 1;

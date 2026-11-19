@@ -1014,33 +1014,38 @@ Shop: ${profile.businessName}
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2.5 sm:p-4 animate-fadeIn">
-      <div className="bg-white dark:bg-navy-900 w-full max-w-xl rounded-3xl p-3.5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5 max-h-[92vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5 shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-2xl bg-gradient-to-tr from-emerald-500 to-purple-600 text-white shadow-sm">
-              <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#F8F4EC] dark:bg-navy-950 w-full h-full min-h-screen animate-fadeIn overflow-hidden">
+      {/* Full-Width Top Studio Header Bar */}
+      <div className="w-full bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-slate-800 shrink-0 px-4 sm:px-8 py-3.5 shadow-sm">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-emerald-500 to-purple-600 text-white shadow-md">
+              <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h2 className="text-xs sm:text-base font-black text-slate-900 dark:text-white leading-tight">
+              <h2 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
                 Social Media & Status Broadcast Studio
               </h2>
-              <span className="text-[10px] text-slate-500 block">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
                 Organize & send products to WhatsApp, Facebook, Instagram & TikTok
               </span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-400 hover:text-black dark:hover:text-white transition-colors"
+            title="Close Broadcast Studio"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
+      </div>
 
-        {/* 📱 SOCIAL CHANNEL SELECTOR TABS (Accommodates Mobile & Tablet) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 pb-1">
+      {/* Main Full-Page Scrollable Studio Body */}
+      <div className="flex-1 overflow-y-auto w-full px-3 sm:px-6 py-4 sm:py-6">
+        <div className="max-w-5xl mx-auto space-y-4">
+          {/* 📱 SOCIAL CHANNEL SELECTOR TABS (Accommodates Mobile & Tablet) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 pb-1">
           <button
             type="button"
             onClick={() => setSocialChannel('whatsapp')}
@@ -1107,8 +1112,8 @@ Shop: ${profile.businessName}
           </button>
         </div>
 
-        {/* Scrollable Body Content */}
-        <div className="overflow-y-auto space-y-3.5 pr-0.5 flex-1">
+        {/* Content Sections Container */}
+        <div className="space-y-4">
           {/* Lock Overlay if Free Trial Expired and not subscribed */}
           {!isUnlocked && (
             <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 space-y-2">
@@ -2102,6 +2107,7 @@ Shop: ${profile.businessName}
         </div>
       </div>
     </div>
+  </div>
   </div>
   );
 }

@@ -110,10 +110,15 @@ export default function CustomerStorefrontContent() {
       fetch(`/api/store/data?${q.toString()}`)
         .then((res) => res.json())
         .then((data) => {
-          if (data && data.success && Array.isArray(data.catalog) && data.catalog.length > 0) {
-            setCatalog(data.catalog);
+          if (data && data.success) {
+            if (Array.isArray(data.catalog) && data.catalog.length > 0) {
+              setCatalog(data.catalog);
+            }
             if (data.businessName) {
               setProfile((prev) => ({ ...prev, businessName: data.businessName }));
+            }
+            if (data.storefrontTheme) {
+              setThemeOverride(data.storefrontTheme as StorefrontTheme);
             }
           }
         })
@@ -124,18 +129,37 @@ export default function CustomerStorefrontContent() {
       const savedView = localStorage.getItem('chinux_store_view_mode') as StorefrontViewMode;
       if (savedView) setViewMode(savedView);
 
-      const savedTheme = localStorage.getItem('chinux_storefront_theme_override') as StorefrontTheme;
-      if (savedTheme) {
-        setThemeOverride(savedTheme);
-      } else if (prof?.storefrontTheme) {
+      // Prioritize merchant's saved storefrontTheme from settings
+      if (prof?.storefrontTheme) {
         setThemeOverride(prof.storefrontTheme);
+      } else {
+        const savedTheme = localStorage.getItem('chinux_storefront_theme_override') as StorefrontTheme;
+        if (savedTheme) {
+          setThemeOverride(savedTheme);
+        }
       }
     } catch (e) {
       // Ignore localStorage read errors in private browsing
     }
   }, []);
 
-  const activeTheme: StorefrontTheme = themeOverride || profile?.storefrontTheme || 'dark';
+  const activeTheme: StorefrontTheme = themeOverride || profile?.storefrontTheme || 'light';
+
+  // Synchronize document root theme class so light theme (cream) is not overridden by global dark class
+  useEffect(() => {
+    if (!isMounted) return;
+    if (activeTheme === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    }
+    return () => {
+      const rawTheme = localStorage.getItem('chinux_theme') || 'light';
+      document.documentElement.className = rawTheme;
+    };
+  }, [activeTheme, isMounted]);
 
   const handleToggleTheme = () => {
     const nextTheme: StorefrontTheme =
@@ -143,6 +167,11 @@ export default function CustomerStorefrontContent() {
     setThemeOverride(nextTheme);
     try {
       localStorage.setItem('chinux_storefront_theme_override', nextTheme);
+      const prof = storage.getProfile();
+      if (prof) {
+        prof.storefrontTheme = nextTheme;
+        storage.saveProfile(prof);
+      }
     } catch (e) {}
   };
 
@@ -283,17 +312,17 @@ export default function CustomerStorefrontContent() {
 
   const themeClasses = {
     wrapper: isLight
-      ? 'bg-slate-100 text-slate-900'
+      ? 'bg-[#F8F4EC] text-slate-900'
       : isEmerald
       ? 'bg-[#051c14] text-white'
       : 'bg-slate-950 text-slate-100',
     card: isLight
-      ? 'bg-white border-slate-200 shadow-sm'
+      ? 'bg-white border-[#E8E1D5] shadow-sm'
       : isEmerald
       ? 'bg-[#0a2f22] border-emerald-800/80 shadow-md'
       : 'bg-slate-900 border-slate-800 shadow-sm',
     innerCard: isLight
-      ? 'bg-slate-50 border-slate-200'
+      ? 'bg-[#FAF7F0] border-[#E8E1D5]'
       : isEmerald
       ? 'bg-[#06241a] border-emerald-900'
       : 'bg-slate-950/70 border-slate-800',
@@ -303,7 +332,7 @@ export default function CustomerStorefrontContent() {
       ? 'bg-[#06241a] border-emerald-800 text-white placeholder-emerald-300/40 focus:ring-emerald-400'
       : 'bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:ring-emerald-500',
     subText: isLight
-      ? 'text-slate-500'
+      ? 'text-slate-600'
       : isEmerald
       ? 'text-emerald-300/80'
       : 'text-slate-400',
@@ -312,7 +341,7 @@ export default function CustomerStorefrontContent() {
       : 'text-white',
     categoryActive: 'bg-emerald-600 text-white shadow-sm',
     categoryInactive: isLight
-      ? 'bg-white border-slate-200 text-slate-700 hover:border-emerald-500'
+      ? 'bg-white border-[#E8E1D5] text-slate-700 hover:border-emerald-500'
       : isEmerald
       ? 'bg-[#0a2f22] border-emerald-800/60 text-emerald-200 hover:border-emerald-500'
       : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-emerald-500',

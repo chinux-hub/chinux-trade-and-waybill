@@ -23,7 +23,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
@@ -46,10 +46,13 @@ export default function RootLayout({
   const [dismissOffline, setDismissOffline] = useState(false);
 
   useEffect(() => {
-    // Load theme from localStorage
-    const savedTheme = localStorage.getItem('chinux_theme') || 'dark';
+    // Default application theme is Light (Warm Cream #F8F4EC)
+    const rawTheme = localStorage.getItem('chinux_theme');
+    const savedTheme = rawTheme === 'sunlight' ? 'light' : rawTheme || 'light';
     setTheme(savedTheme);
-    document.documentElement.className = savedTheme;
+    if (!isStorePage) {
+      document.documentElement.className = savedTheme;
+    }
 
     // Connectivity status
     setIsOffline(!navigator.onLine);

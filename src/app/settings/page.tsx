@@ -60,6 +60,27 @@ export default function SettingsPage() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     storage.saveProfile(profile);
+
+    // Sync storefront theme override so it immediately reflects on /store
+    if (profile.storefrontTheme) {
+      try {
+        localStorage.setItem('chinux_storefront_theme_override', profile.storefrontTheme);
+      } catch (e) {}
+    }
+
+    // Publish updated profile and theme to cloud registry
+    fetch('/api/store/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        businessName: profile.businessName,
+        phone: profile.phone,
+        marketHub: profile.marketLocation,
+        storefrontTheme: profile.storefrontTheme,
+        catalog: storage.getCatalog(),
+      }),
+    }).catch(() => {});
+
     storage.addAuditLog({
       id: 'audit-' + Date.now(),
       timestamp: new Date().toISOString(),
@@ -71,6 +92,7 @@ export default function SettingsPage() {
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2500);
     window.dispatchEvent(new Event('chinux_role_changed'));
+    window.dispatchEvent(new Event('chinux_data_updated'));
   };
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://chinux.ng';

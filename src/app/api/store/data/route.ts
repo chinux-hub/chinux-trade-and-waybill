@@ -9,6 +9,7 @@ interface StoreData {
   marketHub?: string;
   address?: string;
   catalog: any[];
+  storefrontTheme?: string;
   updatedAt: string;
 }
 
@@ -61,6 +62,7 @@ export async function GET(request: NextRequest) {
         phone: store.phone,
         marketHub: store.marketHub,
         catalog: store.catalog,
+        storefrontTheme: store.storefrontTheme || 'light',
         updatedAt: store.updatedAt,
       });
     }
@@ -81,7 +83,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { businessName, phone, marketHub, address, catalog } = body;
+    const { businessName, phone, marketHub, address, catalog, storefrontTheme } = body;
 
     if (!businessName && !phone) {
       return NextResponse.json(
@@ -99,6 +101,7 @@ export async function POST(request: NextRequest) {
       marketHub: marketHub || 'Onitsha Main Market',
       address: address || '',
       catalog: Array.isArray(catalog) ? catalog : [],
+      storefrontTheme: storefrontTheme || 'light',
       updatedAt: new Date().toISOString(),
     };
 

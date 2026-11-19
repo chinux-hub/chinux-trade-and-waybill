@@ -418,27 +418,29 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-[10px] text-slate-400">JSON/CSV</span>
                 </button>
 
-                {/* Theme Selector inside Drawer */}
+                {/* Theme Selector inside Drawer: Light (Cream) & Dark */}
                 <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between font-semibold text-slate-800 dark:text-slate-200">
                   <span>Display Theme</span>
                   <div className="flex gap-1 text-[11px]">
                     <button
                       onClick={() => onToggleTheme('light')}
-                      className={`px-2 py-1 rounded-lg ${theme === 'light' ? 'bg-amber-200 text-amber-900 font-bold' : 'text-slate-400'}`}
+                      className={`px-3 py-1 rounded-lg transition-all ${
+                        theme === 'light'
+                          ? 'bg-amber-200 text-amber-900 font-bold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                      }`}
                     >
-                      Cream
+                      Light
                     </button>
                     <button
                       onClick={() => onToggleTheme('dark')}
-                      className={`px-2 py-1 rounded-lg ${theme === 'dark' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400'}`}
+                      className={`px-3 py-1 rounded-lg transition-all ${
+                        theme === 'dark'
+                          ? 'bg-indigo-600 text-white font-bold shadow-sm'
+                          : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
+                      }`}
                     >
                       Dark
-                    </button>
-                    <button
-                      onClick={() => onToggleTheme('sunlight')}
-                      className={`px-2 py-1 rounded-lg ${theme === 'sunlight' ? 'bg-amber-400 text-slate-900 font-bold' : 'text-slate-400'}`}
-                    >
-                      Sunlight
                     </button>
                   </div>
                 </div>

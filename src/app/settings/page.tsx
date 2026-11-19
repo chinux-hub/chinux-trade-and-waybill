@@ -367,7 +367,6 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                required
                 value={profile.businessName}
                 onChange={(e) => setProfile({ ...profile, businessName: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -380,7 +379,6 @@ export default function SettingsPage() {
               </label>
               <input
                 type="tel"
-                required
                 value={profile.phone}
                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -393,7 +391,6 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                required
                 value={profile.marketLocation}
                 onChange={(e) => setProfile({ ...profile, marketLocation: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white"
@@ -697,7 +694,6 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                required
                 value={profile.bankName}
                 onChange={(e) => setProfile({ ...profile, bankName: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold"
@@ -710,7 +706,6 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                required
                 value={profile.accountNumber}
                 onChange={(e) => setProfile({ ...profile, accountNumber: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono font-bold"
@@ -723,7 +718,6 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                required
                 value={profile.accountName}
                 onChange={(e) => setProfile({ ...profile, accountName: e.target.value })}
                 className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white uppercase font-bold"
